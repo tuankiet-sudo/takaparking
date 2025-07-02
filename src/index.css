@@ -1,0 +1,19 @@
+/* src/index.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f4f4; /* A light grey background like the image */
+}
+
+#root {
+  /* This helps in creating a container that feels like an app screen */
+  max-width: 480px; /* Common mobile screen width */
+  margin: 0 auto;
+  background-color: #fff; /* White background for the main content area */
+  min-height: 100vh;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
