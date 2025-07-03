@@ -72,7 +72,7 @@ const SaveSlotPage = () => {
   return (
     <Box sx={{ padding: 2, textAlign: 'center' }}>
       <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-        Quét mã QR để lưu vị trí
+        Quét mã QR để lưu vị trí xe của bạn
       </Typography>
 
       {isScanning && (
@@ -91,8 +91,8 @@ const SaveSlotPage = () => {
       {scannedResult && (
         <Box sx={{ mt: 3 }}>
           <Alert severity="success" icon={<QrCodeScannerIcon fontSize="inherit" />} sx={{ justifyContent: 'center' }}>
-            <Typography variant="h6">Đã lưu vị trí!</Typography>
-            <Typography>Vị trí của bạn: <strong>{scannedResult}</strong></Typography>
+            <Typography variant="h6">Vị trí xe của bạn đã lưu thành công!</Typography>
+            <Typography><strong>{scannedResult}</strong></Typography>
           </Alert>
         </Box>
       )}
@@ -104,7 +104,7 @@ const SaveSlotPage = () => {
             startIcon={<ReplayIcon />}
             sx={{ mt: 3 }}
         >
-            Quét lại
+            Lưu xe khác
         </Button>
       )}
     </Box>
