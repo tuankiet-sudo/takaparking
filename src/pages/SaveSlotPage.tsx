@@ -1,12 +1,14 @@
+// src/pages/SaveSlotPage.tsx
 import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Alert } from '@mui/material';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode'; // Import the main class
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ReplayIcon from '@mui/icons-material/Replay';
 
 const SaveSlotPage = () => {
   const [scannedResult, setScannedResult] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isScanning) return;
@@ -20,7 +22,7 @@ const SaveSlotPage = () => {
         border: none !important;
         position: relative;
         width: 100%;
-        padding-top: 100%; /* Creates a square aspect ratio */
+        padding-top: 100%;
         border-radius: 16px;
         overflow: hidden;
         background-color: #000;
@@ -33,9 +35,6 @@ const SaveSlotPage = () => {
         height: 100% !important;
         object-fit: cover !important;
       }
-      #${scannerRegionId} button, #${scannerRegionId} span, #${scannerRegionId} br {
-        display: none !important; /* Hides the library's default UI elements */
-      }
       .viewfinder-overlay {
         position: absolute;
         top: 0;
@@ -43,6 +42,9 @@ const SaveSlotPage = () => {
         width: 100%;
         height: 100%;
         z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .viewfinder-box {
         width: 60%;
@@ -55,50 +57,56 @@ const SaveSlotPage = () => {
     document.head.appendChild(style);
     // --- End of Custom Styling ---
 
-    let html5QrcodeScanner: Html5QrcodeScanner | null = null;
+    const html5QrCode = new Html5Qrcode(scannerRegionId);
 
-    try {
-        html5QrcodeScanner = new Html5QrcodeScanner(
-            scannerRegionId,
+    const startScanner = async () => {
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length) {
+          // Find the back camera
+          let cameraId = devices[0].id; // Default to the first camera
+          const backCamera = devices.find(device => device.label.toLowerCase().includes('back'));
+          if (backCamera) {
+            cameraId = backCamera.id;
+          }
+
+          await html5QrCode.start(
+            cameraId,
             {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                // This is the crucial part for selecting the back camera
-                videoConstraints: {
-                    facingMode: { exact: "environment" }
-                }
+              fps: 10,
+              qrbox: { width: 250, height: 250 }
             },
-            /* verbose= */ false
-        );
+            (decodedText) => {
+              setScannedResult(decodedText);
+              setIsScanning(false);
+              html5QrCode.stop().catch(err => console.error("Failed to stop scanner on success", err));
+            },
+            () => {} // Optional scan failure callback
+          );
+        } else {
+            setCameraError("Không tìm thấy camera nào trên thiết bị.");
+        }
+      } catch (err: any) {
+        console.error("Error starting scanner:", err);
+        setCameraError("Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập.");
+      }
+    };
 
-        const onScanSuccess = (decodedText: string) => {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-            }
-            setScannedResult(decodedText);
-            setIsScanning(false);
-        };
-
-        const onScanFailure = (_: any) => {};
-
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-    } catch (error) {
-        console.error("Failed to start html5QrcodeScanner.", error);
-    }
+    startScanner();
 
     return () => {
       document.head.removeChild(style);
-      if (html5QrcodeScanner && html5QrcodeScanner.getState()) {
-         html5QrcodeScanner.clear().catch(error => {
-            console.error("Failed to clear html5QrcodeScanner.", error);
-         });
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => {
+          console.error("Failed to stop scanner on cleanup", err);
+        });
       }
     };
   }, [isScanning]);
 
   const handleRescan = () => {
     setScannedResult(null);
+    setCameraError(null);
     setIsScanning(true);
   };
 
@@ -111,10 +119,14 @@ const SaveSlotPage = () => {
       {isScanning && (
         <Box sx={{ width: '100%', maxWidth: '400px', margin: '0 auto', position: 'relative' }}>
             <div id="html5qr-code-full-region"></div>
-            <Box className="viewfinder-overlay" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Box className="viewfinder-box" />
-            </Box>
+            <div className="viewfinder-overlay">
+                <div className="viewfinder-box" />
+            </div>
         </Box>
+      )}
+
+      {cameraError && (
+         <Alert severity="error" sx={{ mt: 2 }}>{cameraError}</Alert>
       )}
 
       {scannedResult && (
