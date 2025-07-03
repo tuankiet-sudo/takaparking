@@ -24,8 +24,8 @@ const SaveSlotPage = () => {
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length) {
           // Find the back camera
-          let cameraId = devices[-1].id; // Default to the first camera
-          const backCamera = devices.find(device => device.label.toLowerCase().includes('back'));
+          let cameraId = devices[0].id; // Default to the first camera
+          const backCamera = devices.find(device => device.label.toLowerCase().includes('sau'));
           if (backCamera) {
             cameraId = backCamera.id;
           }
