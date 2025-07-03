@@ -1,5 +1,5 @@
 // src/pages/SaveSlotPage.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Alert } from '@mui/material';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
@@ -39,7 +39,7 @@ const SaveSlotPage = () => {
             setIsScanning(false);
         };
 
-        const onScanFailure = (error: any) => {
+        const onScanFailure = (_: any) => {
             // This callback is often verbose, so we can choose to ignore it.
             // console.warn(`Code scan error = ${error}`);
         };
