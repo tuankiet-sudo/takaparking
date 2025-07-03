@@ -9,6 +9,7 @@ const COLUMN_SIZE = 50;
 // const MAP_WIDTH = (NUM_COLS + 1) * GRID_SIZE;
 // const MAP_HEIGHT = (NUM_ROWS + 1) * GRID_SIZE;
 const USER_POSITION = { x: 60, y: 60 };
+const ZOOM_SENSITIVITY = 0.5; // THE CHANGE IS HERE: Lower is less sensitive. 1 is default.
 
 // --- Pathfinding Implementation ---
 class Node {
@@ -125,25 +126,29 @@ const NavigateToSlotPage = () => {
     };
 
     const handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
-        if (event.touches.length === 1) { // Panning
+        if (event.touches.length === 1) {
             setIsDragging(true);
             setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY });
-        } else if (event.touches.length === 2) { // Zooming
+        } else if (event.touches.length === 2) {
             setInitialPinchDistance(getDistance(event.touches));
         }
     };
 
     const handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
-        event.preventDefault(); // Prevent page scroll
-        if (event.touches.length === 1 && isDragging) { // Panning
+        event.preventDefault();
+        if (event.touches.length === 1 && isDragging) {
             const dx = event.touches[0].clientX - lastDragPosition.x;
             const dy = event.touches[0].clientY - lastDragPosition.y;
             setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
             setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY });
-        } else if (event.touches.length === 2 && initialPinchDistance) { // Zooming
+        } else if (event.touches.length === 2 && initialPinchDistance) {
             const newDistance = getDistance(event.touches);
             const scaleFactor = newDistance / initialPinchDistance;
-            setZoom(prevZoom => Math.max(0.3, Math.min(prevZoom * scaleFactor, 5)));
+            
+            // THE CHANGE IS HERE: Dampen the zoom effect using the sensitivity constant
+            const adjustedScaleFactor = 1 + (scaleFactor - 1) * ZOOM_SENSITIVITY;
+
+            setZoom(prevZoom => Math.max(0.3, Math.min(prevZoom * adjustedScaleFactor, 5)));
         }
     };
 
