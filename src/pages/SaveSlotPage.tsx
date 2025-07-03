@@ -1,6 +1,6 @@
 // src/pages/SaveSlotPage.tsx
-import React, { useState, useRef } from 'react';
-import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import { useQrReader } from 'react-qr-reader';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ReplayIcon from '@mui/icons-material/Replay';
