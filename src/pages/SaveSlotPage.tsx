@@ -15,46 +15,6 @@ const SaveSlotPage = () => {
 
     const scannerRegionId = "html5qr-code-full-region";
 
-    // --- Custom Styling Injection ---
-    const style = document.createElement('style');
-    style.innerHTML = `
-      #${scannerRegionId} {
-        border: none !important;
-        position: relative;
-        width: 100%;
-        padding-top: 100%;
-        border-radius: 16px;
-        overflow: hidden;
-        background-color: #000;
-      }
-      #${scannerRegionId} video {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-      }
-      .viewfinder-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .viewfinder-box {
-        width: 60%;
-        height: 60%;
-        border: 4px solid rgba(255, 255, 255, 0.8);
-        border-radius: 16px;
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-      }
-    `;
-    document.head.appendChild(style);
     // --- End of Custom Styling ---
 
     const html5QrCode = new Html5Qrcode(scannerRegionId);
@@ -95,7 +55,6 @@ const SaveSlotPage = () => {
     startScanner();
 
     return () => {
-      document.head.removeChild(style);
       if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().catch(err => {
           console.error("Failed to stop scanner on cleanup", err);
