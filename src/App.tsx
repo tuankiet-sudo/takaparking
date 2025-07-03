@@ -10,6 +10,8 @@ import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import ParkingPage from './pages/ParkingPage';
 import SaveSlotPage from './pages/SaveSlotPage';
+import FindVehiclePage from './pages/FindVehiclePage';
+import NavigateToSlotPage from './pages/NavigateToSlotPage';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/category" element={<CategoryPage />} />
           <Route path="/parking" element={<ParkingPage />} />
           <Route path="/parking/save-slot" element={<SaveSlotPage />} />
+          <Route path="/parking/find-vehicle" element={<FindVehiclePage />} />
+          <Route path="/parking/find-vehicle/navigate" element={<NavigateToSlotPage />} />
           {/* You can add more routes here for other pages */}
         </Routes>
       </Box>
