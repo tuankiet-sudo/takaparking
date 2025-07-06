@@ -230,7 +230,7 @@ const NavigateToSlotPage = () => {
             ctx.lineWidth = 1;
             ctx.fillRect(centerX - width / 2, centerY - height / 2, width, height);
             ctx.strokeRect(centerX - width / 2, centerY - height / 2, width, height);
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = '#757575';
             ctx.save();
             ctx.translate(centerX, centerY);
             if (elevator.orientation === 'vertical') ctx.rotate(-Math.PI / 2);
