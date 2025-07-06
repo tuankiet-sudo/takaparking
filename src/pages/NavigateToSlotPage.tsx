@@ -307,7 +307,7 @@ const NavigateToSlotPage = () => {
     return (
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 150px)' }}>
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, textAlign: 'center' }}>
-                Tìm đường đến xe
+                BẢN ĐỒ BÃI ĐẬU XE - HẦM B3
             </Typography>
             <Box sx={{ flex: 1, border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}>
                 <canvas
