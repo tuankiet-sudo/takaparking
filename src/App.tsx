@@ -13,6 +13,7 @@ import SaveSlotPage from './pages/SaveSlotPage';
 import FindVehiclePage from './pages/FindVehiclePage';
 import NavigateToSlotPage from './pages/NavigateToSlotPage';
 import FindSlotPage from './pages/FindSlotPage';
+import FindSlotMapPage from './pages/FindSlotMapPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/parking/find-vehicle" element={<FindVehiclePage />} />
           <Route path="/parking/find-vehicle/navigate" element={<NavigateToSlotPage />} />
           <Route path="/parking/find-slot" element={<FindSlotPage />} />
+          <Route path="/parking/find-slot/map/:basementId" element={<FindSlotMapPage />} />
           {/* You can add more routes here for other pages */}
         </Routes>
       </Box>
