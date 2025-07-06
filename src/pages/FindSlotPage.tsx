@@ -8,37 +8,43 @@ const FindSlotPage = () => {
     return (
         <Box
             sx={{
-                p: 4,
+                p: 2, // Use consistent padding
+                // The following properties center the content horizontally
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                height: 'calc(100vh - 120px)', // Adjust height to fill viewport minus header/footer
-                textAlign: 'center',
             }}
         >
-            <Typography 
-                variant="h5" 
-                sx={{ fontWeight: 'bold', mb: 4 }}
+            <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    mb: 2 // Use consistent margin-bottom
+                }}
             >
                 HÃY CHỌN TẦNG HẦM BẠN MUỐN GỬI XE
             </Typography>
-            <Stack 
-                spacing={2.5} 
+            <Stack
+                spacing={2.5}
                 sx={{ width: '100%', maxWidth: '350px' }}
             >
                 {basements.map((level) => (
                     <Button
                         key={level}
                         variant="contained"
-                        size="large"
+                        size="medium"
                         // The link will navigate to a path specific to the chosen basement
                         component={RouterLink}
                         to={`/parking/find-slot/${level.toLowerCase()}`}
                         sx={{
-                            py: 2, // Use padding to control button height
+                            py: 1, // Use padding to control button height
                             fontSize: '1.2rem',
                             fontWeight: 'bold',
+                            backgroundColor: '#E53935', // Set the button color
+                            '&:hover': {
+                                backgroundColor: '#C62828' // Darken color on hover
+                            }
                         }}
                     >
                         TẦNG HẦM {level}
