@@ -163,7 +163,39 @@ const NavigateToSlotPage = () => {
                 ctx.fillText(label, posX + COLUMN_SIZE / 2, posY + COLUMN_SIZE / 2);
             }
         }
-        
+
+        // Draw Entrance and Exit
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // --- Entrance (Above A1, B1) ---
+        const entranceX = 1 * GRID_SIZE;
+        const entranceY = 1 * GRID_SIZE - COLUMN_SIZE - 20; // Position above the first row of columns
+        const entranceWidth =  GRID_SIZE + COLUMN_SIZE;
+        const entranceHeight = COLUMN_SIZE;
+        ctx.fillStyle = '#e8f5e9'; // Light green
+        ctx.strokeStyle = '#a5d6a7';
+        ctx.lineWidth = 2;
+        ctx.fillRect(entranceX, entranceY, entranceWidth, entranceHeight);
+        ctx.strokeRect(entranceX, entranceY, entranceWidth, entranceHeight);
+        ctx.fillStyle = '#388e3c'; // Darker green text
+        ctx.fillText('LỐI VÀO', entranceX + entranceWidth / 2, entranceY + entranceHeight / 2);
+
+        // --- Exit (Above K1, L1) ---
+        const exitRunwayOffset = 11 > 4 ? RUNWAY_SIZE : 0;
+        const exitX = 11 * GRID_SIZE + exitRunwayOffset;
+        const exitY = entranceY; // Same Y position
+        const exitWidth = entranceWidth;
+        const exitHeight = entranceHeight;
+        ctx.fillStyle = '#ffebee'; // Light red
+        ctx.strokeStyle = '#ef9a9a';
+        ctx.lineWidth = 2;
+        ctx.fillRect(exitX, exitY, exitWidth, exitHeight);
+        ctx.strokeRect(exitX, exitY, exitWidth, exitHeight);
+        ctx.fillStyle = '#c62828'; // Darker red text
+        ctx.fillText('LỐI RA', exitX + exitWidth / 2, exitY + exitHeight / 2);
+
         // Draw Elevators
         ctx.font = 'bold 20px Arial';
         elevators.forEach(elevator => {

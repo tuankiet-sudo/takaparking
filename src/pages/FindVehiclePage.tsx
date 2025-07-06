@@ -7,20 +7,16 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 // Define the type for a vehicle object
 interface Vehicle {
   id: number;
-  signNumber: string;
   position: string;
-  imageUrl: string;
 }
 
 // Hard-coded vehicle data with the explicit type Vehicle[]
 // Set this to [] to test the "No vehicles saved" feature.
 const savedVehicles: Vehicle[] = [
-    // {
-    //     id: 1,
-    //     signNumber: "59-L3 44559",
-    //     position: "Hầm B3. Cột F8",
-    //     imageUrl: "/vehicle.jpg" // Placeholder image
-    // }
+    {
+        id: 1,
+        position: "Hầm B3. Cột F8",
+    }
 ];
 
 const FindVehiclePage = () => {
