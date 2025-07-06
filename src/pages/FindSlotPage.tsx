@@ -36,7 +36,7 @@ const FindSlotPage = () => {
                         size="medium"
                         // The link will navigate to a path specific to the chosen basement
                         component={RouterLink}
-                        to={`/parking/find-slot/${level.toLowerCase()}`}
+                        to={`/parking/find-slot/map`}
                         sx={{
                             py: 1, // Use padding to control button height
                             fontSize: '1.2rem',

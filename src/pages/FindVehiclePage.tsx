@@ -15,9 +15,10 @@ interface Vehicle {
 const savedVehicles: Vehicle[] = [
     {
         id: 1,
-        position: "Hầm B3. Cột F8",
+        position: 'Hầm B3. Cột L8'
     }
 ];
+
 
 const FindVehiclePage = () => {
     // State for manual vehicle location input
@@ -33,7 +34,7 @@ const FindVehiclePage = () => {
 
         return (
             <Box sx={{
-                p: 3,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -41,18 +42,19 @@ const FindVehiclePage = () => {
                 height: '100%',
                 textAlign: 'center'
             }}>
-                <Stack spacing={3} alignItems="center" component="form" sx={{ width: '100%', maxWidth: '350px' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                        Tìm xe
-                    </Typography>
-                    
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Bạn hiện không có xe nào được lưu
-                    </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 'bold' , mb: 1}}>
+                    Tìm xe
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', }}>
+                    Bạn hiện không có xe nào được lưu
+                </Typography>
 
-                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                        Hãy nhập vị trí xe của bạn để tìm kiếm
-                    </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                    Hãy nhập vị trí xe của bạn để tìm kiếm
+                </Typography>
+                
+                <Stack spacing={2} alignItems="center" component="form" sx={{ width: '100%', maxWidth: '350px' }}>
+                    
 
                     <FormControl fullWidth required>
                         <InputLabel id="basement-select-label">Tầng hầm</InputLabel>
@@ -115,24 +117,24 @@ const FindVehiclePage = () => {
 
         return (
             <Box sx={{
-                p: 4,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
                 textAlign: 'center'
-            }}>
+         }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Tìm xe
+                </Typography>
+                <Typography id="find-vehicle-title" variant="h6" sx={{ fontWeight: 'bold' ,mb: 1 }}>
+                    Takashimaya {currentTime}
+                </Typography>
+                <Typography sx={{ mb: 2 }}>
+                    Vị trí xe của bạn: <strong>{vehicle.position}</strong>
+                </Typography>
                 <Stack spacing={2} alignItems="center">
-                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                        Tìm xe
-                    </Typography>
-                    <Typography id="find-vehicle-title" variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Takashimaya {currentTime}
-                    </Typography>
-                    <Typography>
-                        Vị trí xe của bạn: <strong>{vehicle.position}</strong>
-                    </Typography>
                     <Button
                         variant="contained"
                         startIcon={<LocationOnIcon />}

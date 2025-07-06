@@ -7,7 +7,7 @@ const CategoryPage = () => {
   return (
     <Box>
       <Typography 
-        variant="h6" 
+        variant="h5" 
         sx={{ 
             fontWeight: 'bold', 
             padding: '16px 16px 0 16px' // Add padding
