@@ -26,6 +26,13 @@ const CAR_PARKING_AREA = {
     startCol: 5, endCol: 8, startRow: 1, endRow: 4,
 };
 
+const BOOKING_AREA = {
+    startCol: 1,  // A
+    endCol: 12,   // L
+    startRow: 9,  // 9
+    endRow: 9,    // 9
+};
+
 // --- A* Pathfinding Implementation ---
 class Node {
     x: number; y: number; isObstacle: boolean; g: number = 0; h: number = 0; f: number = 0; parent: Node | null = null;
@@ -122,6 +129,22 @@ const NavigateToSlotPage = () => {
         ctx.font = 'italic 28px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Khu vực dành cho xe hơi', carRectX + (carRectEndX - carRectX) / 2, carRectY + (carRectEndY - carRectY) / 2);
+
+        const bookingArea = BOOKING_AREA;
+        const bookingAreaRunwayXStart = bookingArea.startCol > 4 ? RUNWAY_SIZE : 0;
+        const bookingAreaRunwayYStart = bookingArea.startRow > 4 ? RUNWAY_SIZE : 0;
+        const bookingRectX = bookingArea.startCol * GRID_SIZE + bookingAreaRunwayXStart - (GRID_SIZE - COLUMN_SIZE) / 2;
+        const bookingRectY = bookingArea.startRow * GRID_SIZE + bookingAreaRunwayYStart - (GRID_SIZE - COLUMN_SIZE) / 2;
+        const bookingRectEndX = bookingArea.endCol * GRID_SIZE + (bookingArea.endCol > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
+        const bookingRectEndY = bookingArea.endRow * GRID_SIZE + (bookingArea.endRow > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
+        ctx.fillStyle = '#f5f5f5'; // A very light green background
+        ctx.fillRect(bookingRectX, bookingRectY, bookingRectEndX - bookingRectX, bookingRectEndY - bookingRectY);
+        
+        ctx.fillStyle = '#bdbdbd'; // A darker green for the text
+        ctx.font = 'italic 28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Khu vực dành cho booking', bookingRectX + (bookingRectEndX - bookingRectX) / 2, bookingRectY + (bookingRectEndY - bookingRectY) / 2 + 60);
+
 
         // Draw Columns
         ctx.font = 'bold 20px Arial';
