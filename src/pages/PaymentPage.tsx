@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import  { useState } from 'react';
 import { Box, Typography, Button, Stack, Paper, IconButton, Tooltip, Snackbar, Modal, Fade } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -23,7 +23,22 @@ const PaymentPage = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [qrModalOpen, setQrModalOpen] = useState(false);
-    const [paymentSuccessModalOpen, setPaymentSuccessModalOpen] = useState(false); // ADDED: State for success modal
+    const [paymentSuccessModalOpen, setPaymentSuccessModalOpen] = useState(false);
+
+    // --- Time and Amount Calculation ---
+    const now = new Date();
+    const parkedTime = new Date(now.getTime() - 3 * 60 * 60 * 1000 - 47 * 60 * 1000);
+    const parkingFee = "5.000 VND";
+
+    // Helper to format date and time
+    const formatDateTime = (date: Date) => {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${hours}:${minutes} - ${day}/${month}/${year}`;
+    };
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text).then(() => {
@@ -36,7 +51,6 @@ const PaymentPage = () => {
         });
     };
     
-    // MODIFIED: This now opens the success modal
     const handlePaymentConfirmation = () => {
         setPaymentSuccessModalOpen(true);
     };
@@ -69,7 +83,7 @@ const PaymentPage = () => {
     };
 
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh' }}>
+        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh', pb: 4 }}>
             {/* --- Header --- */}
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -84,6 +98,16 @@ const PaymentPage = () => {
 
             {/* --- Main Content --- */}
             <Box sx={{ p: 2 }}>
+                {/* --- Parking Details Section --- */}
+                <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 3 }}>
+                    <Stack spacing={2}>
+                        <DetailRow label="Thời gian vào" value={formatDateTime(parkedTime)} />
+                        <DetailRow label="Thời gian ra" value={formatDateTime(now)} />
+                        <DetailRow label="Thời gian gửi xe" value="3 giờ 47 phút" />
+                        <DetailRow label="Số tiền" value={parkingFee} />
+                    </Stack>
+                </Paper>
+
                 <Typography sx={{ textAlign: 'center', color: 'text.secondary', mb: 2 }}>
                     Sử dụng ứng dụng ngân hàng quét mã QR dưới đây để tiến hành chuyển khoản
                 </Typography>
@@ -143,7 +167,7 @@ const PaymentPage = () => {
                     Hoặc nhập thủ công thông tin chuyển khoản bên dưới
                 </Typography>
 
-                {/* --- Manual Details Section --- */}
+                {/* --- Bank Transfer Details Section --- */}
                 <Paper elevation={0} sx={{ p: 2, borderRadius: '16px' }}>
                     <Stack spacing={2.5}>
                         <DetailRow label="Ngân hàng thụ hưởng" value={paymentDetails.bankName} />
@@ -193,7 +217,7 @@ const PaymentPage = () => {
                 </Fade>
             </Modal>
 
-            {/* ADDED: Payment Success Modal */}
+            {/* --- Payment Success Modal --- */}
             <Modal
                 open={paymentSuccessModalOpen}
                 onClose={handleCloseSuccessModalAndNavigate}

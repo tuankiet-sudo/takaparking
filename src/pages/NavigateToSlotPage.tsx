@@ -1,6 +1,8 @@
 // src/pages/NavigateToSlotPage.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Paper, IconButton } from '@mui/material';
+import {  useNavigate } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // --- Configuration for the map ---
 const NUM_COLS = 12; // A to L are columns
@@ -92,6 +94,7 @@ const findPath = (startNode: Node, endNode: Node, grid: Node[][]): Node[] => {
 
 
 const NavigateToSlotPage = () => {
+    const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [zoom, setZoom] = useState(0.7);
     const [offset, setOffset] = useState({ x: 20, y: 20 });
@@ -337,10 +340,17 @@ const NavigateToSlotPage = () => {
     }, [zoom]);
 
     return (
-        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 150px)' }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, textAlign: 'center' }}>
-                BẢN ĐỒ BÃI ĐẬU XE - HẦM B3
-            </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 150px)' }}>
+            <Paper elevation={1} sx={{top: 0, zIndex: 10, bgcolor: 'white' }}>
+                <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <IconButton onClick={() => navigate(-1)}>
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                        Bản đồ bãi đỗ xe
+                    </Typography>
+                </Box>
+            </Paper>
             <Box sx={{ flex: 1, border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}>
                 <canvas
                     ref={canvasRef}
