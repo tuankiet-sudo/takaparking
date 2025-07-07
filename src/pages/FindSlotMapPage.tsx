@@ -261,7 +261,7 @@ const FindSlotMapPage = () => {
                     <IconButton onClick={() => navigate(-1)}>
                         <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
                         Bản đồ hầm {basementId?.toUpperCase()}
                     </Typography>
                 </Box>

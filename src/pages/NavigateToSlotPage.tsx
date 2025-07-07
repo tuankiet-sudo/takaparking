@@ -329,7 +329,7 @@ const NavigateToSlotPage = () => {
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <IconButton onClick={() => navigate(-1)}><ArrowBackIcon /></IconButton>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
                         Bản đồ bãi đỗ xe
                     </Typography>
                 </Box>
