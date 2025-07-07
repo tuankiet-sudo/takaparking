@@ -2,6 +2,8 @@
 // import React from 'react';
 import { Box, Typography, Card, CardMedia } from '@mui/material';
 import CategoryGrid from '../components/CategoryGrid';
+import SearchIcon from '@mui/icons-material/Search';
+import { Toolbar, InputBase } from '@mui/material';
 
 const beautyProducts = [
     { name: "KIEHL'S", image: "/kiehls.jpg" },
@@ -12,6 +14,22 @@ const beautyProducts = [
 const HomePage = () => {
   return (
     <>
+    <Toolbar sx={{ minHeight: '48px !important', padding: '0 16px 8px 16px' }}>
+          <Box sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '20px',
+              padding: '4px 12px'
+          }}>
+              <SearchIcon sx={{ color: 'gray' }}/>
+              <InputBase
+                  placeholder="Bạn muốn tìm gì hôm nay..."
+                  sx={{ ml: 1, flex: 1, fontSize: '0.9rem' }}
+              />
+          </Box>
+      </Toolbar>
       {/* Promotional Banner */}
       <Box sx={{ padding: '0 16px' }}>
          <Card sx={{ position: 'relative', borderRadius: '16px' }}>

@@ -8,12 +8,12 @@ const NUM_COLS = 12; // A to L
 const NUM_ROWS = 9;  // 1 to 9
 const GRID_SIZE = 150;
 const COLUMN_SIZE = 50;
-// const ZOOM_SENSITIVITY = 0.5;
+const ZOOM_SENSITIVITY = 0.5; // Added for pinch-zoom consistency
 const RUNWAY_SIZE = GRID_SIZE * 0.5;
 const USER_START_COL = 3;
 const USER_START_ROW = 2;
 const USER_POSITION = { x: USER_START_COL * GRID_SIZE + 25, y: USER_START_ROW * GRID_SIZE + GRID_SIZE / 2 };
-const EXIT_NODE_COORDINATES = { x: 11, y: 1 }; // Logical node for the exit near K1/L1
+const EXIT_NODE_COORDINATES = { x: 11, y: 1 };
 
 const elevators = [
     { name: "Thang máy Zone A", betweenCols: [3, 4], spansRows: [2, 4], orientation: 'vertical' },
@@ -24,7 +24,7 @@ const elevators = [
 const CAR_PARKING_AREA = { startCol: 5, endCol: 8, startRow: 1, endRow: 4 };
 const BOOKING_AREA = { startCol: 1, endCol: 12, startRow: 9, endRow: 9 };
 
-// --- A* Pathfinding Implementation ---
+// --- A* Pathfinding Implementation (Unchanged) ---
 class Node {
     x: number; y: number; isObstacle: boolean; g: number = 0; h: number = 0; f: number = 0; parent: Node | null = null;
     constructor(x: number, y: number, isObstacle = false) { this.x = x; this.y = y; this.isObstacle = isObstacle; }
@@ -65,7 +65,6 @@ const findPath = (startNode: Node, endNode: Node, grid: Node[][]): Node[] => {
     return [];
 };
 
-// Helper to create a clean copy of the grid for pathfinding
 const deepCloneGrid = (grid: Node[][]): Node[][] => {
     return grid.map(col => col.map(node => new Node(node.x, node.y, node.isObstacle)));
 };
@@ -77,9 +76,10 @@ const NavigateToSlotPage = () => {
     const [offset, setOffset] = useState({ x: 20, y: 20 });
     const [isDragging, setIsDragging] = useState(false);
     const [lastDragPosition, setLastDragPosition] = useState({ x: 0, y: 0 });
+    const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null); // Added for pinch-zoom
     const [vehiclePosition, setVehiclePosition] = useState({ x: 0, y: 0 });
     const [pathToVehicle, setPathToVehicle] = useState<Node[]>([]);
-    const [pathToExit, setPathToExit] = useState<Node[]>([]); // ADDED: State for exit path
+    const [pathToExit, setPathToExit] = useState<Node[]>([]);
 
     const draw = () => {
         const canvas = canvasRef.current;
@@ -95,7 +95,6 @@ const NavigateToSlotPage = () => {
         ctx.translate(offset.x, offset.y);
         ctx.scale(zoom, zoom);
         
-        // --- Draw Areas, Columns, Entrance, Exit, Elevators (Largely unchanged) ---
         const carArea = CAR_PARKING_AREA;
         const carAreaRunwayXStart = carArea.startCol > 4 ? RUNWAY_SIZE : 0;
         const carAreaRunwayYStart = carArea.startRow > 4 ? RUNWAY_SIZE : 0;
@@ -103,9 +102,9 @@ const NavigateToSlotPage = () => {
         const carRectY = carArea.startRow * GRID_SIZE + carAreaRunwayYStart - (GRID_SIZE - COLUMN_SIZE) / 2;
         const carRectEndX = carArea.endCol * GRID_SIZE + (carArea.endCol > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
         const carRectEndY = carArea.endRow * GRID_SIZE + (carArea.endRow > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
-        ctx.fillStyle = '#bdbdbd';
-        ctx.fillRect(carRectX, carRectY, carRectEndX - carRectX, carRectEndY - carRectY);
         ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(carRectX, carRectY, carRectEndX - carRectX, carRectEndY - carRectY);
+        ctx.fillStyle = '#bdbdbd';
         ctx.font = 'italic 28px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Khu vực dành cho xe hơi', carRectX + (carRectEndX - carRectX) / 2, carRectY + (carRectEndY - carRectY) / 2);
@@ -117,10 +116,10 @@ const NavigateToSlotPage = () => {
         const bookingRectY = bookingArea.startRow * GRID_SIZE + bookingAreaRunwayYStart - (GRID_SIZE - COLUMN_SIZE) / 2;
         const bookingRectEndX = bookingArea.endCol * GRID_SIZE + (bookingArea.endCol > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
         const bookingRectEndY = bookingArea.endRow * GRID_SIZE + (bookingArea.endRow > 4 ? RUNWAY_SIZE : 0) + COLUMN_SIZE + (GRID_SIZE - COLUMN_SIZE) / 2;
-        ctx.fillStyle = '#bdbdbd';
+        ctx.fillStyle = '#f5f5f5';
         ctx.fillRect(bookingRectX, bookingRectY, bookingRectEndX - bookingRectX, bookingRectEndY - bookingRectY);
         
-        ctx.fillStyle = '#f5f5f5';
+        ctx.fillStyle = '#bdbdbd';
         ctx.font = 'italic 28px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Khu vực dành cho booking', bookingRectX + (bookingRectEndX - bookingRectX) / 2, bookingRectY + (bookingRectEndY - bookingRectY) / 2 + 60);
@@ -211,7 +210,6 @@ const NavigateToSlotPage = () => {
             ctx.restore();
         });
 
-        // --- Draw Path to Vehicle (Red) ---
         if (pathToVehicle.length > 0) {
             ctx.beginPath();
             ctx.moveTo(USER_POSITION.x, USER_POSITION.y);
@@ -228,7 +226,6 @@ const NavigateToSlotPage = () => {
             ctx.stroke();
         }
 
-        // --- ADDED: Draw Path to Exit (Yellow) ---
         if (pathToExit.length > 0) {
             const vehicleNode = pathToExit[0];
             const vehicleRunwayX = vehicleNode.x > 4 ? RUNWAY_SIZE : 0;
@@ -245,14 +242,13 @@ const NavigateToSlotPage = () => {
                 const pathY = node.y * GRID_SIZE + GRID_SIZE / 2 + runwayOffsetY;
                 ctx.lineTo(pathX, pathY);
             }
-            ctx.strokeStyle = '#FFC107'; // Yellow color
+            ctx.strokeStyle = '#FFC107';
             ctx.lineWidth = 5;
             ctx.setLineDash([10, 10]);
             ctx.stroke();
             ctx.setLineDash([]);
         }
 
-        // --- Draw User Icon ---
         ctx.fillStyle = '#4caf50';
         ctx.beginPath();
         ctx.arc(USER_POSITION.x, USER_POSITION.y, COLUMN_SIZE / 2, 0, 2 * Math.PI);
@@ -263,13 +259,16 @@ const NavigateToSlotPage = () => {
         ctx.restore();
     };
 
-    // --- Event Handlers for Interactivity (Unchanged) ---
+    // --- MODIFIED: Correct event handlers for both mouse and touch ---
     const handleWheel = (event: WheelEvent) => { event.preventDefault(); const scaleAmount = 1.1; setZoom(prevZoom => { const newZoom = event.deltaY < 0 ? prevZoom * scaleAmount : prevZoom / scaleAmount; return Math.max(0.3, Math.min(newZoom, 5)); }); };
     const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => { setIsDragging(true); setLastDragPosition({ x: event.clientX, y: event.clientY }); };
     const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => { if (!isDragging) return; const dx = event.clientX - lastDragPosition.x; const dy = event.clientY - lastDragPosition.y; setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy })); setLastDragPosition({ x: event.clientX, y: event.clientY }); };
     const handleMouseUp = () => setIsDragging(false);
-    
-    // --- useEffect Hooks ---
+    const getDistance = (touches: React.TouchList) => { return Math.sqrt(Math.pow(touches[0].clientX - touches[1].clientX, 2) + Math.pow(touches[0].clientY - touches[1].clientY, 2)); };
+    const handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => { if (event.touches.length === 1) { setIsDragging(true); setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY }); } else if (event.touches.length === 2) { setInitialPinchDistance(getDistance(event.touches)); } };
+    const handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => { event.preventDefault(); if (event.touches.length === 1 && isDragging) { const dx = event.touches[0].clientX - lastDragPosition.x; const dy = event.touches[0].clientY - lastDragPosition.y; setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy })); setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY }); } else if (event.touches.length === 2 && initialPinchDistance) { const newDistance = getDistance(event.touches); const scaleFactor = newDistance / initialPinchDistance; const adjustedScaleFactor = 1 + (scaleFactor - 1) * ZOOM_SENSITIVITY; setZoom(prevZoom => Math.max(0.3, Math.min(prevZoom * adjustedScaleFactor, 5))); } };
+    const handleTouchEnd = () => { setIsDragging(false); setInitialPinchDistance(null); };
+
     useEffect(() => {
         const cols = NUM_COLS + 1;
         const rows = NUM_ROWS + 1;
@@ -285,14 +284,13 @@ const NavigateToSlotPage = () => {
             }
         });
 
-        const fixedXIndex = 6; // Vehicle at column F
-        const fixedYIndex = 8; // Vehicle at row 8
+        const fixedXIndex = 6;
+        const fixedYIndex = 8;
         
         const vehicleRunwayOffsetX = fixedXIndex > 4 ? RUNWAY_SIZE : 0;
         const vehicleRunwayOffsetY = fixedYIndex > 4 ? RUNWAY_SIZE : 0;
         setVehiclePosition({ x: fixedXIndex * GRID_SIZE + vehicleRunwayOffsetX, y: fixedYIndex * GRID_SIZE + vehicleRunwayOffsetY });
         
-        // --- Calculate Path 1: User to Vehicle ---
         const gridForPath1 = deepCloneGrid(baseGrid);
         const startNode = gridForPath1[USER_START_COL - 1][USER_START_ROW];
         const vehicleNode = gridForPath1[fixedXIndex][fixedYIndex];
@@ -301,7 +299,6 @@ const NavigateToSlotPage = () => {
         const calculatedPathToVehicle = findPath(startNode, vehicleNode, gridForPath1);
         setPathToVehicle(calculatedPathToVehicle);
         
-        // --- Calculate Path 2: Vehicle to Exit ---
         const gridForPath2 = deepCloneGrid(baseGrid);
         const vehicleNodeForExit = gridForPath2[fixedXIndex][fixedYIndex];
         const exitNode = gridForPath2[EXIT_NODE_COORDINATES.x][EXIT_NODE_COORDINATES.y];
@@ -329,13 +326,12 @@ const NavigateToSlotPage = () => {
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <IconButton onClick={() => navigate(-1)}><ArrowBackIcon /></IconButton>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
                         Bản đồ bãi đỗ xe
                     </Typography>
                 </Box>
             </Paper>
 
-            {/* --- ADDED: Legend --- */}
             <Paper elevation={0} sx={{ p: 1.5, mx: 2, mt: 2, borderRadius: '12px', bgcolor: 'white' }}>
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" flexWrap="wrap">
                     <LegendItem color="#E53935" text="Đường đến xe" />
@@ -353,9 +349,10 @@ const NavigateToSlotPage = () => {
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
-                        onTouchStart={(e) => { if (e.touches.length === 1) handleMouseDown(e as any); }}
-                        onTouchMove={(e) => { if (e.touches.length === 1) handleMouseMove(e as any); }}
-                        onTouchEnd={handleMouseUp}
+                        // MODIFIED: Correct touch event handlers
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                     />
                 </Box>
             </Box>
@@ -363,7 +360,6 @@ const NavigateToSlotPage = () => {
     );
 };
 
-// Helper component for the legend
 const LegendItem = ({ color, text, isBox = false }: { color: string; text: string; isBox?: boolean }) => (
     <Stack direction="row" spacing={1} alignItems="center">
         <Box sx={{ width: 20, height: isBox ? 20 : 5, bgcolor: color, borderRadius: isBox ? '4px' : '2px' }} />

@@ -1,6 +1,6 @@
 // import React from 'react';
-import { AppBar, Toolbar, Box, InputBase, IconButton, Badge } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { AppBar, Toolbar, Box, IconButton, Badge } from '@mui/material';
+// import SearchIcon from '@mui/icons-material/Search';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 // For Zalo and the main logo, you would typically use an <img> or <svg>
 // Let's use placeholders for now.
@@ -23,7 +23,7 @@ const Header = () => {
           </Badge>
         </IconButton>
       </Toolbar>
-      <Toolbar sx={{ minHeight: '48px !important', padding: '0 16px 8px 16px' }}>
+      {/* <Toolbar sx={{ minHeight: '48px !important', padding: '0 16px 8px 16px' }}>
           <Box sx={{
               flexGrow: 1,
               display: 'flex',
@@ -38,7 +38,7 @@ const Header = () => {
                   sx={{ ml: 1, flex: 1, fontSize: '0.9rem' }}
               />
           </Box>
-      </Toolbar>
+      </Toolbar> */}
     </AppBar>
   );
 };
