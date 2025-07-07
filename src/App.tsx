@@ -16,6 +16,7 @@ import FindSlotPage from './pages/FindSlotPage';
 import FindSlotMapPage from './pages/FindSlotMapPage';
 import PaymentPage from './pages/PaymentPage';
 import PaymentConfirmationPage from './pages/PaymentConfirmationPage';
+import BookingPage from './pages/BookingPage';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="/parking/find-slot/map/:basementId" element={<FindSlotMapPage />} />
           <Route path="/parking/pay-fee" element={<PaymentPage />} />
           <Route path="/parking/pay-fee/confirm" element={<PaymentConfirmationPage />} />
+          <Route path="/parking/book-slot" element={<BookingPage />} />
           {/* You can add more routes here for other pages */}
         </Routes>
       </Box>
