@@ -74,19 +74,19 @@ const SaveSlotPage = () => {
 
   return (
     <Box sx={{ padding: 2, textAlign: 'center' }}>
-      <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-        Quét mã QR để lưu vị trí xe của bạn
+      <Paper elevation={1} sx={{ top: 0, zIndex: 10, bgcolor: 'white' }}>
+          <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <IconButton onClick={() => navigate(-1)}>
+                  <ArrowBackIcon />
+              </IconButton>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                Lưu vị trí xe
+              </Typography>
+          </Box>
+      </Paper>
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+        Hãy quét mã QR trên cột để lưu vị trí xe của bạn
       </Typography>
-            <Paper elevation={1} sx={{ top: 0, zIndex: 10, bgcolor: 'white' }}>
-                <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <IconButton onClick={() => navigate(-1)}>
-                        <ArrowBackIcon />
-                    </IconButton>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                        Bản đồ hầm 
-                    </Typography>
-                </Box>
-            </Paper>
 
       {isScanning && (
         <Box sx={{ width: '100%', maxWidth: '400px', margin: '0 auto', position: 'relative' }}>

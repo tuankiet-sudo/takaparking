@@ -1,13 +1,12 @@
-// import React from 'react';
-import { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Button, Stack, Divider, Modal, Fade } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import  { useState, useEffect } from 'react';
+import { Box, Typography, Paper, IconButton, Stack, Divider } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import Button from '@mui/material/Button'; // Ensure Button is imported if used elsewhere
 
 // Helper for detail rows
 const DetailRow = ({ label, value, valueColor = 'text.primary' }: { label: string, value: string, valueColor?: string }) => (
@@ -19,23 +18,14 @@ const DetailRow = ({ label, value, valueColor = 'text.primary' }: { label: strin
 
 const PaymentConfirmationPage = () => {
     const navigate = useNavigate();
-    // const { vehicleId } = useParams<{ vehicleId: string }>();
-    const [successModalOpen, setSuccessModalOpen] = useState(false);
-
-    const handleOpenSuccessModal = () => {
-        setSuccessModalOpen(true);
-    };
-
-    const handleCloseSuccessModal = () => {
-        setSuccessModalOpen(false);
-        navigate('/parking/find-vehicle'); // Redirect to the Find Vehicle page after closing the modal
-    };
+    const { vehicleId } = useParams<{ vehicleId: string }>();
+    const [countdown, setCountdown] = useState(10);
 
     // Hardcoded data for the demo
     const transaction = {
         id: '#2534003',
-        imageUrl: '/vehicle.jpg', // Replace with actual image URL
-        licensePlate: '59L3-44559',
+        imageUrl: '/vehicle.jpg',
+        licensePlate: vehicleId || '59L3-44559', // Use vehicleId from params
         timeIn: '25/06/2025 20:43:35',
         location: 'Takashimaya',
         fee: '5,000 VND',
@@ -44,8 +34,23 @@ const PaymentConfirmationPage = () => {
         total: '5,000 VND'
     };
 
+    // --- Countdown Timer Logic ---
+    useEffect(() => {
+        if (countdown <= 0) {
+            navigate('/parking/pay-fee/confirm/success');
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setCountdown(prevCountdown => prevCountdown - 1);
+        }, 1000);
+
+        // Cleanup the interval on component unmount
+        return () => clearInterval(timer);
+    }, [countdown, navigate]);
+
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh' }}>
+        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh', pb: 4 }}>
             {/* --- Header --- */}
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -103,57 +108,24 @@ const PaymentConfirmationPage = () => {
                         <DetailRow label="Tổng" value={transaction.total} valueColor="red" />
                     </Stack>
                 </Paper>
+
+                {/* --- QR Code and Countdown Section --- */}
+                <Paper elevation={0} sx={{ p: 2, mt: 2, borderRadius: '16px', bgcolor: 'white', textAlign: 'center' }}>
+                    <Typography sx={{ fontWeight: 'bold', mb: 1 }}>Vui lòng quét mã QR để thanh toán</Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                        <img src="/qrcode.png" alt="Payment QR Code" style={{ width: 200, height: 200 }} />
+                    </Box>
+                    {/* <Typography variant="body2" color="text.secondary">
+                        Tự động chuyển trang sau...
+                    </Typography>
+                    <Box sx={{ width: '100%', mt: 1 }}>
+                        <LinearProgress variant="determinate" value={(10 - countdown) * 10} />
+                    </Box>
+                    <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+                        {countdown}s
+                    </Typography> */}
+                </Paper>
             </Box>
-
-            {/* --- Footer with Pay Button --- */}
-            <Paper elevation={2} sx={{ position: 'sticky', bottom: 0, p: 2 }}>
-                <Button
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    onClick={() => { handleOpenSuccessModal(); }}
-                    sx={{
-                        py: 1.5,
-                        fontSize: '1.1rem',
-                        fontWeight: 'bold',
-                        borderRadius: '12px',
-                        backgroundColor: '#E53935',
-                        '&:hover': { backgroundColor: '#C62828' }
-                    }}
-                >
-                    Thanh toán
-                </Button>
-            </Paper>
-
-            <Modal
-                open={successModalOpen}
-                onClose={handleCloseSuccessModal}
-                closeAfterTransition
-                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-                <Fade in={successModalOpen}>
-                    <Paper sx={{ p: 4, borderRadius: '16px', textAlign: 'center', maxWidth: '90%', width: '350px' }}>
-                        <CheckCircleOutlineIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                            Thanh toán thành công
-                        </Typography>
-                        <Typography sx={{ color: 'text.secondary', mb: 3 }}>
-                            Cảm ơn quý khách đã sử dụng dịch vụ. Bạn có thể tìm xe của mình ngay bây giờ.
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={handleCloseSuccessModal}
-                            sx={{ 
-                                backgroundColor: '#E53935',
-                                '&:hover': { backgroundColor: '#C62828' }
-                            }}
-                        >
-                            Đến trang Tìm xe
-                        </Button>
-                    </Paper>
-                </Fade>
-            </Modal>
         </Box>
     );
 };
