@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Alert, Paper, IconButton } from '@mui/material';
 import { Html5Qrcode } from 'html5-qrcode';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
@@ -12,89 +12,69 @@ const SaveSlotPage = () => {
   const [scannedResult, setScannedResult] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  
-  // --- ADDED: State for camera management ---
   const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
   const [activeCameraId, setActiveCameraId] = useState<string | null>(null);
   
-  // Use a ref to hold the html5-qrcode instance
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerRegionId = "html5qr-code-full-region";
 
-  // --- Effect to initialize and manage the scanner ---
+  // --- Effect 1: Get available cameras on component mount ---
   useEffect(() => {
-    if (!isScanning) {
-      // Stop the scanner if it's running and we are no longer in scanning mode
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(err => console.error("Failed to stop scanner.", err));
-      }
-      return;
-    }
-
-    const setupScanner = async () => {
-      try {
-        // Get available cameras
-        const devices = await Html5Qrcode.getCameras();
+    Html5Qrcode.getCameras()
+      .then(devices => {
         if (devices && devices.length) {
           setCameras(devices);
-          // Set initial camera if not already set
-          if (!activeCameraId) {
-            const backCamera = devices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('sau'));
-            setActiveCameraId(backCamera ? backCamera.id : devices[0].id);
-          }
+          // Prefer the back camera if available
+          const backCamera = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('sau'));
+          setActiveCameraId(backCamera ? backCamera.id : devices[0].id);
         } else {
           setCameraError("Không tìm thấy camera nào trên thiết bị.");
         }
-      } catch (err) {
-        console.error("Error getting cameras:", err);
-        setCameraError("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
-      }
-    };
-
-    setupScanner();
-
-    // Cleanup function to stop the scanner when the component unmounts
-    return () => {
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(err => {
-          console.error("Failed to stop scanner on cleanup", err);
-        });
-      }
-    };
-  }, [isScanning]); // Rerun setup when isScanning changes
-
-  // --- Effect to start/restart the scanner when the active camera changes ---
-  useEffect(() => {
-    if (isScanning && activeCameraId) {
-      // Ensure the instance is created
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode(scannerRegionId, {
-            verbose: false // Optional: turn off verbose logging
-        });
-      }
-      
-      const qrCode = html5QrCodeRef.current;
-
-      // Stop previous scanner if it's running
-      if (qrCode.isScanning) {
-        qrCode.stop();
-      }
-
-      // Start new scanner with the active camera
-      qrCode.start(
-        activeCameraId,
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-        (decodedText) => {
-          setScannedResult(decodedText);
-          setIsScanning(false);
-        },
-        () => {} // Optional scan failure callback
-      ).catch(err => {
-        console.error(`Error starting scanner with camera ${activeCameraId}:`, err);
-        setCameraError("Lỗi khi khởi động camera được chọn.");
+      })
+      .catch(err => {
+        console.error("Camera permission error:", err);
+        setCameraError("Vui lòng cấp quyền truy cập camera để quét mã.");
       });
+  }, []); // Run only once on mount
+
+  // --- Effect 2: Manage the scanner lifecycle ---
+  // This effect starts, stops, and restarts the scanner based on state changes.
+  useEffect(() => {
+    // Don't do anything if we're not supposed to be scanning or no camera is selected
+    if (!isScanning || !activeCameraId) {
+      return;
     }
-  }, [isScanning, activeCameraId]); // Rerun when active camera changes
+
+    // Create a new instance every time to avoid state issues
+    const html5QrCode = new Html5Qrcode(scannerRegionId, { verbose: false });
+
+    const startScanner = () => {
+        html5QrCode.start(
+            activeCameraId,
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                setScannedResult(decodedText);
+                setIsScanning(false); // This will trigger the cleanup
+            },
+            () => {} // Optional scan failure callback
+        ).catch(err => {
+            setCameraError("Không thể khởi động camera.");
+            console.error("Error starting scanner:", err);
+        });
+    };
+
+    startScanner();
+
+    // --- CRITICAL: Cleanup function ---
+    // This function runs whenever the component unmounts or the dependencies [isScanning, activeCameraId] change.
+    // This is how we stop the old camera stream before starting a new one.
+    return () => {
+      if (html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => {
+          console.error("Failed to stop scanner cleanly.", err);
+        });
+      }
+    };
+  }, [isScanning, activeCameraId]); // Re-run this effect when the scanning state or active camera changes
 
   const handleRescan = () => {
     setScannedResult(null);
@@ -102,11 +82,12 @@ const SaveSlotPage = () => {
     setIsScanning(true);
   };
 
-  // --- ADDED: Handler to flip the camera ---
   const handleFlipCamera = () => {
     if (cameras.length > 1 && activeCameraId) {
       const currentIndex = cameras.findIndex(c => c.id === activeCameraId);
       const nextIndex = (currentIndex + 1) % cameras.length;
+      // Changing the active camera ID will trigger the useEffect hook above
+      // to stop the old stream and start a new one.
       setActiveCameraId(cameras[nextIndex].id);
     }
   };
