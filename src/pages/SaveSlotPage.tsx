@@ -1,10 +1,10 @@
-// src/pages/SaveSlotPage.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, Alert, Paper, IconButton } from '@mui/material';
-import { Html5Qrcode } from 'html5-qrcode'; // Import the main class
+import { Html5Qrcode } from 'html5-qrcode';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ReplayIcon from '@mui/icons-material/Replay';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import FlipCameraIosIcon from '@mui/icons-material/FlipCameraIos';
 import { useNavigate } from 'react-router-dom';
 
 const SaveSlotPage = () => {
@@ -12,59 +12,89 @@ const SaveSlotPage = () => {
   const [scannedResult, setScannedResult] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  
+  // --- ADDED: State for camera management ---
+  const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
+  const [activeCameraId, setActiveCameraId] = useState<string | null>(null);
+  
+  // Use a ref to hold the html5-qrcode instance
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerRegionId = "html5qr-code-full-region";
 
+  // --- Effect to initialize and manage the scanner ---
   useEffect(() => {
-    if (!isScanning) return;
+    if (!isScanning) {
+      // Stop the scanner if it's running and we are no longer in scanning mode
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(err => console.error("Failed to stop scanner.", err));
+      }
+      return;
+    }
 
-    const scannerRegionId = "html5qr-code-full-region";
-
-    // --- End of Custom Styling ---
-
-    const html5QrCode = new Html5Qrcode(scannerRegionId);
-
-    const startScanner = async () => {
+    const setupScanner = async () => {
       try {
+        // Get available cameras
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length) {
-          // Find the back camera
-          let cameraId = devices[0].id; // Default to the first camera
-          const backCamera = devices.find(device => device.label.toLowerCase().includes('sau'));
-          if (backCamera) {
-            cameraId = backCamera.id;
+          setCameras(devices);
+          // Set initial camera if not already set
+          if (!activeCameraId) {
+            const backCamera = devices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('sau'));
+            setActiveCameraId(backCamera ? backCamera.id : devices[0].id);
           }
-
-          await html5QrCode.start(
-            cameraId,
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 }
-            },
-            (decodedText) => {
-              setScannedResult(decodedText);
-              setIsScanning(false);
-              html5QrCode.stop().catch(err => console.error("Failed to stop scanner on success", err));
-            },
-            () => {} // Optional scan failure callback
-          );
         } else {
-            setCameraError("Không tìm thấy camera nào trên thiết bị.");
+          setCameraError("Không tìm thấy camera nào trên thiết bị.");
         }
-      } catch (err: any) {
-        console.error("Error starting scanner:", err);
-        setCameraError("Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập.");
+      } catch (err) {
+        console.error("Error getting cameras:", err);
+        setCameraError("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
       }
     };
 
-    startScanner();
+    setupScanner();
 
+    // Cleanup function to stop the scanner when the component unmounts
     return () => {
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(err => {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(err => {
           console.error("Failed to stop scanner on cleanup", err);
         });
       }
     };
-  }, [isScanning]);
+  }, [isScanning]); // Rerun setup when isScanning changes
+
+  // --- Effect to start/restart the scanner when the active camera changes ---
+  useEffect(() => {
+    if (isScanning && activeCameraId) {
+      // Ensure the instance is created
+      if (!html5QrCodeRef.current) {
+        html5QrCodeRef.current = new Html5Qrcode(scannerRegionId, {
+            verbose: false // Optional: turn off verbose logging
+        });
+      }
+      
+      const qrCode = html5QrCodeRef.current;
+
+      // Stop previous scanner if it's running
+      if (qrCode.isScanning) {
+        qrCode.stop();
+      }
+
+      // Start new scanner with the active camera
+      qrCode.start(
+        activeCameraId,
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          setScannedResult(decodedText);
+          setIsScanning(false);
+        },
+        () => {} // Optional scan failure callback
+      ).catch(err => {
+        console.error(`Error starting scanner with camera ${activeCameraId}:`, err);
+        setCameraError("Lỗi khi khởi động camera được chọn.");
+      });
+    }
+  }, [isScanning, activeCameraId]); // Rerun when active camera changes
 
   const handleRescan = () => {
     setScannedResult(null);
@@ -72,9 +102,18 @@ const SaveSlotPage = () => {
     setIsScanning(true);
   };
 
+  // --- ADDED: Handler to flip the camera ---
+  const handleFlipCamera = () => {
+    if (cameras.length > 1 && activeCameraId) {
+      const currentIndex = cameras.findIndex(c => c.id === activeCameraId);
+      const nextIndex = (currentIndex + 1) % cameras.length;
+      setActiveCameraId(cameras[nextIndex].id);
+    }
+  };
+
   return (
     <Box sx={{ padding: 2, textAlign: 'center' }}>
-      <Paper elevation={1} sx={{ top: 0, zIndex: 10, bgcolor: 'white' }}>
+      <Paper elevation={1} sx={{ top: 0, zIndex: 10, bgcolor: 'white', mb: 2 }}>
           <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
               <IconButton onClick={() => navigate(-1)}>
                   <ArrowBackIcon />
@@ -84,16 +123,30 @@ const SaveSlotPage = () => {
               </Typography>
           </Box>
       </Paper>
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+      <Typography variant="subtitle1" sx={{ mb: 1 }}>
         Hãy quét mã QR trên cột để lưu vị trí xe của bạn
       </Typography>
 
       {isScanning && (
         <Box sx={{ width: '100%', maxWidth: '400px', margin: '0 auto', position: 'relative' }}>
-            <div id="html5qr-code-full-region"></div>
-            <div className="viewfinder-overlay">
-                <div className="viewfinder-box" />
-            </div>
+            <div id={scannerRegionId} style={{ borderRadius: '8px', overflow: 'hidden' }}></div>
+            {cameras.length > 1 && (
+              <IconButton
+                onClick={handleFlipCamera}
+                sx={{
+                  position: 'absolute',
+                  bottom: 16,
+                  right: 16,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  }
+                }}
+              >
+                <FlipCameraIosIcon />
+              </IconButton>
+            )}
         </Box>
       )}
 
