@@ -130,6 +130,28 @@ const SaveSlotPage = () => {
             )}
         </Box>
       )}
+      
+      {cameras.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        Danh sách camera khả dụng:
+          </Typography>
+          {cameras.map((cam, idx) => (
+        <Typography
+          key={cam.id}
+          sx={{
+            fontWeight: cam.id === activeCameraId ? 'bold' : 'normal',
+            color: cam.id === activeCameraId ? 'primary.main' : 'text.primary',
+            fontSize: 14,
+          }}
+        >
+          {idx + 1}. {cam.label || `Camera ${idx + 1}`}
+          {cam.id === activeCameraId && ' (đang dùng)'}
+        </Typography>
+          ))}
+        </Box>
+      )}
+
 
       {cameraError && (
          <Alert severity="error" sx={{ mt: 2 }}>{cameraError}</Alert>
