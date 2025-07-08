@@ -50,7 +50,7 @@ const PaymentConfirmationPage = () => {
     }, [countdown, navigate]);
 
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh', pb: 4 }}>
+        <Box sx={{ bgcolor: '#f7f7f7', pb: 4 }}>
             {/* --- Header --- */}
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>

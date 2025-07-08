@@ -120,6 +120,24 @@ const BookingConfirmationPage = () => {
                     Vị trí xe của bạn đã được tự động lưu trên hệ thống. Sau khi mua sắm, vui lòng mở ứng dụng và chọn chức năng "Tìm xe" để được chỉ dẫn đến xe trong bãi.
                 </Typography>
             </Box>
+
+            <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                onClick={() => navigate('/parking')}
+                sx={{
+                    py: 1,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    borderRadius: '12px',
+                    backgroundColor: '#E53935',
+                    maxWidth: '200px',
+                    '&:hover': { backgroundColor: '#C62828' }
+                }}
+            >
+                Hoàn tất
+            </Button>
         </Box>
     );
 };

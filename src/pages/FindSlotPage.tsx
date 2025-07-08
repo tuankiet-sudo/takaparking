@@ -8,7 +8,7 @@ const FindSlotPage = () => {
     const basements = ["B3", "B4", "B5", "B6"];
 
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh' }}>
+        <Box sx={{ bgcolor: '#f7f7f7'}}>
             {/* --- Header --- */}
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -43,7 +43,7 @@ const FindSlotPage = () => {
                 </Typography>
                 <Stack
                     spacing={2.5}
-                    sx={{ width: '100%', maxWidth: '350px' }}
+                    sx={{ width: '100%', maxWidth: '350px', mx: 'auto', mb: 4 }}
                 >
                     {basements.map((level) => (
                         <Button

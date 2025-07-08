@@ -28,7 +28,7 @@ const PaymentPage = () => {
     };
 
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh' }}>
+        <Box sx={{ bgcolor: '#f7f7f7' }}>
             {/* --- Header --- */}
             <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
