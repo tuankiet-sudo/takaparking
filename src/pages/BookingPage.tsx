@@ -181,14 +181,14 @@ const BookingPage = () => {
                     {/* --- Place Section --- */}
                     <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 2 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>Vị trí</Typography>
-                        <Stack direction="row" spacing={2}>
-                            <FormControl sx={{ minWidth: 80 }}>
+                        <Stack direction="column" alignItems={'center'} spacing={2}>
+                            <FormControl sx={{ minWidth: 80, maxWidth: 200 }}>
                                 <InputLabel>Cột</InputLabel>
                                 <Select value={selectedColumn} label="Cột" onChange={(e) => setSelectedColumn(e.target.value)}>
                                     {columns.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                                 </Select>
                             </FormControl>
-                            <Box sx={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 1 }}>
+                            <Box sx={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 1, width: '100%' }}>
                                 {Array.from({ length: 20 }, (_, i) => i + 1).map(slotNumber => {
                                     const status = getSlotStatus(selectedColumn, slotNumber);
                                     const isSelected = selectedSlots.includes(`${selectedColumn}-${slotNumber}`);
