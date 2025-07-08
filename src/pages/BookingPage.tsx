@@ -182,7 +182,7 @@ const BookingPage = () => {
                     <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 2 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>Vị trí</Typography>
                         <Stack direction="row" spacing={2}>
-                            <FormControl sx={{ minWidth: 60 }}>
+                            <FormControl sx={{ minWidth: 80 }}>
                                 <InputLabel>Cột</InputLabel>
                                 <Select value={selectedColumn} label="Cột" onChange={(e) => setSelectedColumn(e.target.value)}>
                                     {columns.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
