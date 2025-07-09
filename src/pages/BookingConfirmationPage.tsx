@@ -15,7 +15,7 @@ const groupSlotsByColumn = (bookedSlots: string[]) => {
             acc[column] = {
                 column: column,
                 slots: [],
-                qrCodeUrl: `https://placehold.co/200x200/ffffff/000000?text=QR+${column}`
+                qrCodeUrl: `/${column}.png` // Assuming QR code images are named by column
             };
         }
         acc[column].slots.push(parseInt(slotNumber));
