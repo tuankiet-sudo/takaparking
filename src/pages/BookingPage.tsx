@@ -12,7 +12,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import dayjs, { Dayjs } from 'dayjs';
 
 const MAX_BOOKABLE_SLOTS = 4;
-const API_BASE_URL = 'https://takaparking-be.vercel.app'; // Get the Vercel URL
+const API_BASE_URL = 'https://takaparking-be.vercel.app';
 
 interface ParkingSlot {
     id: number;
@@ -35,8 +35,8 @@ const BookingPage = () => {
     const [allSlots, setAllSlots] = useState<ParkingSlot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-    const [selectedHour, setSelectedHour] = useState<string>('09');
-    const [selectedMinute, setSelectedMinute] = useState<string>('00');
+    const [selectedHour, setSelectedHour] = useState<string>(dayjs().format('HH'));
+    const [selectedMinute, setSelectedMinute] = useState<string>(String(Math.ceil(dayjs().minute() / 5) * 5).padStart(2, '0'));
     const [selectedColumn, setSelectedColumn] = useState<string>('E9');
     const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
     const [warningModalOpen, setWarningModalOpen] = useState(false);
@@ -44,9 +44,40 @@ const BookingPage = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
-    const hours = Array.from({ length: 14 }, (_, i) => String(9 + i).padStart(2, '0'));
-    const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+    const now = dayjs();
     const columns = Array.from({ length: 8 }, (_, i) => `${String.fromCharCode(69 + i)}9`);
+
+    // --- MODIFIED: Dynamic Time Options ---
+    const availableHours = useMemo(() => {
+        const allHours = Array.from({ length: 14 }, (_, i) => String(9 + i).padStart(2, '0'));
+        if (selectedDate?.isSame(now, 'day')) {
+            return allHours.filter(h => parseInt(h) >= now.hour());
+        }
+        return allHours;
+    }, [selectedDate, now]);
+
+    const availableMinutes = useMemo(() => {
+        const allMinutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+        if (selectedDate?.isSame(now, 'day') && selectedHour === now.format('HH')) {
+            const currentMinute = now.minute();
+            return allMinutes.filter(m => parseInt(m) >= currentMinute);
+        }
+        return allMinutes;
+    }, [selectedDate, selectedHour, now]);
+
+    // Effect to reset time if it becomes invalid
+    useEffect(() => {
+        if (!availableHours.includes(selectedHour)) {
+            setSelectedHour(availableHours[0] || '09');
+        }
+    }, [availableHours, selectedHour]);
+
+    useEffect(() => {
+        if (!availableMinutes.includes(selectedMinute)) {
+            setSelectedMinute(availableMinutes[0] || '00');
+        }
+    }, [availableMinutes, selectedMinute]);
+
 
     const userSelectedTime = useMemo(() => {
         if (!selectedDate) return null;
@@ -58,11 +89,9 @@ const BookingPage = () => {
         const fetchSlots = async () => {
             setIsLoading(true);
             try {
-                // MODIFIED: Use the full Vercel URL
                 const response = await fetch(`${API_BASE_URL}/api/slots?time=${userSelectedTime.toISOString()}`);
                 if (!response.ok) throw new Error('Failed to fetch slot data from server');
                 const data: ParkingSlot[] = await response.json();
-                console.log("Fetched slots:", data[0]);
                 setAllSlots(data);
             } catch (error) {
                 console.error(error);
@@ -86,7 +115,7 @@ const BookingPage = () => {
             const bookedTime = dayjs(slot.booking_time);
             const minutesDifference = bookedTime.diff(userSelectedTime, 'minute');
             if (userSelectedTime.isAfter(bookedTime)) return 'booked_before';
-            if (minutesDifference <= 60 && minutesDifference >= 0) return 'booked_before';
+            if (minutesDifference <= 90 && minutesDifference >= 0) return 'booked_before';
             if (minutesDifference > 90) return 'booked_after';
         }
         return 'available';
@@ -149,7 +178,6 @@ const BookingPage = () => {
             };
         });
         try {
-            // MODIFIED: Use the full Vercel URL
             const response = await fetch(`${API_BASE_URL}/api/bookings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -159,7 +187,12 @@ const BookingPage = () => {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Lỗi khi tạo đặt chỗ.');
             }
-            navigate('/parking/book-slot/success');
+            navigate('/parking/book-slot/success', {
+                state: {
+                    bookedSlots: selectedSlots,
+                    bookingDateTime: userSelectedTime.toISOString()
+                }
+            });
         } catch (error: any) {
             console.error("Booking failed:", error);
             setSnackbarMessage(error.message || 'Đặt chỗ thất bại. Vui lòng thử lại.');
@@ -189,12 +222,27 @@ const BookingPage = () => {
                             <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 2 }}>
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>Thời gian</Typography>
                                 <Stack spacing={2}>
-                                    <DatePicker label="Ngày muốn đặt" value={selectedDate} onChange={(date) => setSelectedDate(date)} />
+                                    <DatePicker 
+                                        label="Ngày muốn đặt" 
+                                        value={selectedDate} 
+                                        onChange={(date) => setSelectedDate(date)}
+                                        minDate={dayjs()} // Disable past dates
+                                    />
                                     <Box>
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>Giờ đến</Typography>
                                         <Stack direction="row" spacing={2}>
-                                            <FormControl fullWidth><InputLabel>Giờ</InputLabel><Select value={selectedHour} label="Giờ" onChange={(e) => setSelectedHour(e.target.value)}>{hours.map(h => <MenuItem key={h} value={h}>{h}</MenuItem>)}</Select></FormControl>
-                                            <FormControl fullWidth><InputLabel>Phút</InputLabel><Select value={selectedMinute} label="Phút" onChange={(e) => setSelectedMinute(e.target.value)}>{minutes.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}</Select></FormControl>
+                                            <FormControl fullWidth>
+                                                <InputLabel>Giờ</InputLabel>
+                                                <Select value={selectedHour} label="Giờ" onChange={(e) => setSelectedHour(e.target.value)}>
+                                                    {availableHours.map(h => <MenuItem key={h} value={h}>{h}</MenuItem>)}
+                                                </Select>
+                                            </FormControl>
+                                            <FormControl fullWidth>
+                                                <InputLabel>Phút</InputLabel>
+                                                <Select value={selectedMinute} label="Phút" onChange={(e) => setSelectedMinute(e.target.value)}>
+                                                    {availableMinutes.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
+                                                </Select>
+                                            </FormControl>
                                         </Stack>
                                     </Box>
                                 </Stack>
