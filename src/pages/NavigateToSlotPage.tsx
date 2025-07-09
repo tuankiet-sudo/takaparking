@@ -8,7 +8,7 @@ const NUM_COLS = 12; // A to L
 const NUM_ROWS = 9;  // 1 to 9
 const GRID_SIZE = 150;
 const COLUMN_SIZE = 50;
-const ZOOM_SENSITIVITY = 0.5; // Added for pinch-zoom consistency
+const ZOOM_SENSITIVITY = 0.5;
 const RUNWAY_SIZE = GRID_SIZE * 0.5;
 const USER_START_COL = 3;
 const USER_START_ROW = 2;
@@ -76,10 +76,73 @@ const NavigateToSlotPage = () => {
     const [offset, setOffset] = useState({ x: 20, y: 20 });
     const [isDragging, setIsDragging] = useState(false);
     const [lastDragPosition, setLastDragPosition] = useState({ x: 0, y: 0 });
-    const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null); // Added for pinch-zoom
+    const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
     const [vehiclePosition, setVehiclePosition] = useState({ x: 0, y: 0 });
     const [pathToVehicle, setPathToVehicle] = useState<Node[]>([]);
     const [pathToExit, setPathToExit] = useState<Node[]>([]);
+    const [pageTitle, setPageTitle] = useState('Bản đồ bãi đỗ xe');
+
+    // --- Effect to calculate paths based on saved location ---
+    useEffect(() => {
+        const savedVehicleData = localStorage.getItem('savedVehicle');
+        if (!savedVehicleData) {
+            // Handle case where no vehicle is saved, maybe navigate back or show a message
+            console.error("No saved vehicle found in localStorage.");
+            setPageTitle("Không tìm thấy xe");
+            return;
+        }
+
+        const savedVehicle: { position: string } = JSON.parse(savedVehicleData);
+        // Parse "Hầm B3. Cột L8" into 'L' and '8'
+        const parts = savedVehicle.position.match(/Cột ([A-L])(\d{1,2})/);
+        if (!parts) {
+            console.error("Invalid position format in localStorage:", savedVehicle.position);
+            return;
+        }
+
+        const colLetter = parts[1];
+        const rowNumber = parseInt(parts[2], 10);
+        // Convert letter to grid index (A=1, B=2, ...)
+        const colIndex = colLetter.charCodeAt(0) - 64;
+
+        setPageTitle(`Bản đồ đến cột ${colLetter}${rowNumber}`);
+
+        // --- Pathfinding logic using dynamic coordinates ---
+        const cols = NUM_COLS + 1;
+        const rows = NUM_ROWS + 1;
+        const baseGrid: Node[][] = Array(cols).fill(null).map((_, x) => Array(rows).fill(null).map((__, y) => new Node(x, y)));
+        
+        elevators.forEach(elevator => {
+            if (elevator.orientation === 'vertical') {
+                const col = elevator.betweenCols![0];
+                for (let row = elevator.spansRows![0]; row <= elevator.spansRows![1]; row++) { if(baseGrid[col]?.[row]) baseGrid[col][row].isObstacle = true; }
+            } else {
+                const row = elevator.betweenRows![0];
+                for (let col = elevator.spansCols![0]; col <= elevator.spansCols![1]; col++) { if(baseGrid[col]?.[row]) baseGrid[col][row].isObstacle = true; }
+            }
+        });
+
+        const vehicleRunwayOffsetX = colIndex > 4 ? RUNWAY_SIZE : 0;
+        const vehicleRunwayOffsetY = rowNumber > 4 ? RUNWAY_SIZE : 0;
+        setVehiclePosition({ x: colIndex * GRID_SIZE + vehicleRunwayOffsetX, y: rowNumber * GRID_SIZE + vehicleRunwayOffsetY });
+        
+        const gridForPath1 = deepCloneGrid(baseGrid);
+        const startNode = gridForPath1[USER_START_COL - 1][USER_START_ROW];
+        const vehicleNode = gridForPath1[colIndex][rowNumber];
+        startNode.isObstacle = false;
+        vehicleNode.isObstacle = false;
+        const calculatedPathToVehicle = findPath(startNode, vehicleNode, gridForPath1);
+        setPathToVehicle(calculatedPathToVehicle);
+        
+        const gridForPath2 = deepCloneGrid(baseGrid);
+        const vehicleNodeForExit = gridForPath2[colIndex][rowNumber];
+        const exitNode = gridForPath2[EXIT_NODE_COORDINATES.x][EXIT_NODE_COORDINATES.y];
+        vehicleNodeForExit.isObstacle = false;
+        exitNode.isObstacle = false;
+        const calculatedPathToExit = findPath(vehicleNodeForExit, exitNode, gridForPath2);
+        setPathToExit(calculatedPathToExit);
+
+    }, []); // Run only once on mount
 
     const draw = () => {
         const canvas = canvasRef.current;
@@ -95,6 +158,8 @@ const NavigateToSlotPage = () => {
         ctx.translate(offset.x, offset.y);
         ctx.scale(zoom, zoom);
         
+        // Drawing logic for areas, columns, paths, etc. remains the same
+        // ... (all the ctx.fillRect, ctx.fillText, ctx.stroke calls) ...
         const carArea = CAR_PARKING_AREA;
         const carAreaRunwayXStart = carArea.startCol > 4 ? RUNWAY_SIZE : 0;
         const carAreaRunwayYStart = carArea.startRow > 4 ? RUNWAY_SIZE : 0;
@@ -259,7 +324,10 @@ const NavigateToSlotPage = () => {
         ctx.restore();
     };
 
-    // --- MODIFIED: Correct event handlers for both mouse and touch ---
+    useEffect(() => {
+        draw();
+    }, [zoom, offset, pathToVehicle, pathToExit, vehiclePosition]);
+
     const handleWheel = (event: WheelEvent) => { event.preventDefault(); const scaleAmount = 1.1; setZoom(prevZoom => { const newZoom = event.deltaY < 0 ? prevZoom * scaleAmount : prevZoom / scaleAmount; return Math.max(0.3, Math.min(newZoom, 5)); }); };
     const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => { setIsDragging(true); setLastDragPosition({ x: event.clientX, y: event.clientY }); };
     const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => { if (!isDragging) return; const dx = event.clientX - lastDragPosition.x; const dy = event.clientY - lastDragPosition.y; setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy })); setLastDragPosition({ x: event.clientX, y: event.clientY }); };
@@ -268,50 +336,6 @@ const NavigateToSlotPage = () => {
     const handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => { if (event.touches.length === 1) { setIsDragging(true); setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY }); } else if (event.touches.length === 2) { setInitialPinchDistance(getDistance(event.touches)); } };
     const handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => { event.preventDefault(); if (event.touches.length === 1 && isDragging) { const dx = event.touches[0].clientX - lastDragPosition.x; const dy = event.touches[0].clientY - lastDragPosition.y; setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy })); setLastDragPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY }); } else if (event.touches.length === 2 && initialPinchDistance) { const newDistance = getDistance(event.touches); const scaleFactor = newDistance / initialPinchDistance; const adjustedScaleFactor = 1 + (scaleFactor - 1) * ZOOM_SENSITIVITY; setZoom(prevZoom => Math.max(0.3, Math.min(prevZoom * adjustedScaleFactor, 5))); } };
     const handleTouchEnd = () => { setIsDragging(false); setInitialPinchDistance(null); };
-
-    useEffect(() => {
-        const cols = NUM_COLS + 1;
-        const rows = NUM_ROWS + 1;
-        const baseGrid: Node[][] = Array(cols).fill(null).map((_, x) => Array(rows).fill(null).map((__, y) => new Node(x, y)));
-        
-        elevators.forEach(elevator => {
-            if (elevator.orientation === 'vertical') {
-                const col = elevator.betweenCols![0];
-                for (let row = elevator.spansRows![0]; row <= elevator.spansRows![1]; row++) { if(baseGrid[col]?.[row]) baseGrid[col][row].isObstacle = true; }
-            } else {
-                const row = elevator.betweenRows![0];
-                for (let col = elevator.spansCols![0]; col <= elevator.spansCols![1]; col++) { if(baseGrid[col]?.[row]) baseGrid[col][row].isObstacle = true; }
-            }
-        });
-
-        const fixedXIndex = 6;
-        const fixedYIndex = 8;
-        
-        const vehicleRunwayOffsetX = fixedXIndex > 4 ? RUNWAY_SIZE : 0;
-        const vehicleRunwayOffsetY = fixedYIndex > 4 ? RUNWAY_SIZE : 0;
-        setVehiclePosition({ x: fixedXIndex * GRID_SIZE + vehicleRunwayOffsetX, y: fixedYIndex * GRID_SIZE + vehicleRunwayOffsetY });
-        
-        const gridForPath1 = deepCloneGrid(baseGrid);
-        const startNode = gridForPath1[USER_START_COL - 1][USER_START_ROW];
-        const vehicleNode = gridForPath1[fixedXIndex][fixedYIndex];
-        startNode.isObstacle = false;
-        vehicleNode.isObstacle = false;
-        const calculatedPathToVehicle = findPath(startNode, vehicleNode, gridForPath1);
-        setPathToVehicle(calculatedPathToVehicle);
-        
-        const gridForPath2 = deepCloneGrid(baseGrid);
-        const vehicleNodeForExit = gridForPath2[fixedXIndex][fixedYIndex];
-        const exitNode = gridForPath2[EXIT_NODE_COORDINATES.x][EXIT_NODE_COORDINATES.y];
-        vehicleNodeForExit.isObstacle = false;
-        exitNode.isObstacle = false;
-        const calculatedPathToExit = findPath(vehicleNodeForExit, exitNode, gridForPath2);
-        setPathToExit(calculatedPathToExit);
-
-    }, []);
-
-    useEffect(() => {
-        draw();
-    }, [zoom, offset, pathToVehicle, pathToExit, vehiclePosition]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -327,11 +351,10 @@ const NavigateToSlotPage = () => {
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <IconButton onClick={() => navigate(-1)}><ArrowBackIcon /></IconButton>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                        Bản đồ bãi đỗ xe
+                        {pageTitle}
                     </Typography>
                 </Box>
             </Paper>
-
             <Paper elevation={0} sx={{ p: 1.5, mx: 2, mt: 2, borderRadius: '12px', bgcolor: 'white' }}>
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" flexWrap="wrap">
                     <LegendItem color="#E53935" text="Đường đến xe" />
@@ -339,7 +362,6 @@ const NavigateToSlotPage = () => {
                     <LegendItem color="#1976d2" text="Vị trí xe" isBox />
                 </Stack>
             </Paper>
-            
             <Box sx={{ flex: 1, p: 2, display: 'flex' }}>
                 <Box sx={{ flex: 1, border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}>
                     <canvas
@@ -349,7 +371,6 @@ const NavigateToSlotPage = () => {
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
-                        // MODIFIED: Correct touch event handlers
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
