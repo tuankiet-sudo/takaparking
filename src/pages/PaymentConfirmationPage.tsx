@@ -40,7 +40,7 @@ const PaymentConfirmationPage = () => {
         timeIn: formatDateTime(timeInTime), // Format the time in
         location: 'Takashimaya',
         fee: '5,000 VND',
-        duration: '0 giờ 35 phút',
+        duration: '3 giờ 35 phút',
         discount: '0 VND',
         total: '5,000 VND'
     };
