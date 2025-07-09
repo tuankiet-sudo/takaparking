@@ -47,7 +47,7 @@ const SaveSlotPage = () => {
             setIsScanning(false);
             try {
                 // Expected format: "B3-A1", "B4-C5", etc.
-                throw new Error(decodedText);
+                // throw new Error(decodedText);
                 const parts = decodedText.split('-');
                 if (parts.length !== 2 || !parts[0].startsWith('B') || !/^[A-L]\d{1,2}$/.test(parts[1])) {
                     throw new Error("Mã QR không hợp lệ. Vui lòng quét lại.");
