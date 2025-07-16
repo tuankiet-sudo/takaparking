@@ -1,7 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, Typography, Paper, IconButton, Stack } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Stack, Fab, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+// --- (ICON) Add new icons for the TTS button ---
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 // --- Configuration for the map ---
 const NUM_COLS = 12; // A to L
@@ -81,19 +83,20 @@ const NavigateToSlotPage = () => {
     const [pathToVehicle, setPathToVehicle] = useState<Node[]>([]);
     const [pathToExit, setPathToExit] = useState<Node[]>([]);
     const [pageTitle, setPageTitle] = useState('Bản đồ bãi đỗ xe');
+    // --- (STATE) New state to manage TTS loading status ---
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [vehicleLocation, setVehicleLocation] = useState('');
 
     // --- Effect to calculate paths based on saved location ---
     useEffect(() => {
         const savedVehicleData = localStorage.getItem('savedVehicle');
         if (!savedVehicleData) {
-            // Handle case where no vehicle is saved, maybe navigate back or show a message
             console.error("No saved vehicle found in localStorage.");
             setPageTitle("Không tìm thấy xe");
             return;
         }
 
         const savedVehicle: { position: string } = JSON.parse(savedVehicleData);
-        // Parse "Hầm B3. Cột L8" into 'L' and '8'
         const parts = savedVehicle.position.match(/Cột ([A-L])(\d{1,2})/);
         if (!parts) {
             console.error("Invalid position format in localStorage:", savedVehicle.position);
@@ -102,12 +105,12 @@ const NavigateToSlotPage = () => {
 
         const colLetter = parts[1];
         const rowNumber = parseInt(parts[2], 10);
-        // Convert letter to grid index (A=1, B=2, ...)
         const colIndex = colLetter.charCodeAt(0) - 64;
 
-        setPageTitle(`Bản đồ đến cột ${colLetter}${rowNumber}`);
+        const vehicleLocationString = `${colLetter}${rowNumber}`;
+        setVehicleLocation(vehicleLocationString);
+        setPageTitle(`Bản đồ đến cột ${vehicleLocationString}`);
 
-        // --- Pathfinding logic using dynamic coordinates ---
         const cols = NUM_COLS + 1;
         const rows = NUM_ROWS + 1;
         const baseGrid: Node[][] = Array(cols).fill(null).map((_, x) => Array(rows).fill(null).map((__, y) => new Node(x, y)));
@@ -142,7 +145,96 @@ const NavigateToSlotPage = () => {
         const calculatedPathToExit = findPath(vehicleNodeForExit, exitNode, gridForPath2);
         setPathToExit(calculatedPathToExit);
 
-    }, []); // Run only once on mount
+    }, []);
+
+    // --- (NEW) Function to generate spoken directions from the path ---
+    const generateSpokenDirections = (path: Node[], targetLocation: string): string => {
+        // 1. Handle edge cases where the path is too short to have directions.
+        if (path.length < 2) {
+            return `Bạn đã ở ngay tại vị trí cột ${targetLocation}.`;
+        }
+
+        const directions: string[] = [`Bắt đầu chỉ đường đến cột ${targetLocation}.`];
+        let straightCount = 0;
+        
+        // 2. Iterate through the path to calculate segments and turns.
+        for (let i = 0; i < path.length - 1; i++) {
+            straightCount++;
+            
+            // Check if a turn occurs at the next node (requires at least 3 points: current, next, and next-next)
+            if (i < path.length - 2) {
+                const currentNode = path[i];
+                const nextNode = path[i+1];
+                const futureNode = path[i+2];
+
+                // Calculate direction vectors for the current and next segments
+                const vector1 = { x: nextNode.x - currentNode.x, y: nextNode.y - currentNode.y };
+                const vector2 = { x: futureNode.x - nextNode.x, y: futureNode.y - nextNode.y };
+
+                // If the vectors are different, a turn has occurred.
+                if (vector1.x !== vector2.x || vector1.y !== vector2.y) {
+                    // Add the "go straight" instruction for the segment that just ended.
+                    directions.push(`Đi thẳng ${straightCount} cột.`);
+                    straightCount = 0; // Reset counter for the new segment
+
+                    // 3. Use the cross-product to determine turn direction (left/right).
+                    // This is a reliable way to determine rotation in 2D space.
+                    const crossProduct = vector1.x * vector2.y - vector1.y * vector2.x;
+
+                    if (crossProduct > 0) {
+                        directions.push("Sau đó, rẽ phải.");
+                    } else if (crossProduct < 0) {
+                        directions.push("Sau đó, rẽ trái.");
+                    }
+                }
+            }
+        }
+
+        // 4. Add the final "go straight" instruction for the last segment of the path.
+        if (straightCount > 0) {
+            directions.push(`Đi thẳng ${straightCount} cột.`);
+        }
+
+        // 5. Add the arrival message.
+        directions.push(`Bạn đã đến nơi. Xe của bạn ở cột ${targetLocation}.`);
+        
+
+        return directions.join(' ');
+    };
+
+
+    // --- (NEW) Function to call the TTS API and play the audio ---
+    const handleSpeak = async () => {
+        if (isSpeaking || pathToVehicle.length === 0) return;
+
+        setIsSpeaking(true);
+        try {
+            const directionsText = generateSpokenDirections(pathToVehicle, vehicleLocation);
+            // const exitText = generateSpokenDirections(pathToExit, 'lối ra bãi đỗ xe');
+            const response = await fetch('https://takaparking-be.vercel.app/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: directionsText }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`TTS API failed with status: ${response.status}`);
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+
+            audio.onended = () => {
+                setIsSpeaking(false);
+            };
+
+        } catch (error) {
+            console.error("Error fetching or playing TTS audio:", error);
+            setIsSpeaking(false);
+        }
+    };
 
     const draw = () => {
         const canvas = canvasRef.current;
@@ -158,8 +250,6 @@ const NavigateToSlotPage = () => {
         ctx.translate(offset.x, offset.y);
         ctx.scale(zoom, zoom);
         
-        // Drawing logic for areas, columns, paths, etc. remains the same
-        // ... (all the ctx.fillRect, ctx.fillText, ctx.stroke calls) ...
         const carArea = CAR_PARKING_AREA;
         const carAreaRunwayXStart = carArea.startCol > 4 ? RUNWAY_SIZE : 0;
         const carAreaRunwayYStart = carArea.startRow > 4 ? RUNWAY_SIZE : 0;
@@ -362,7 +452,7 @@ const NavigateToSlotPage = () => {
                     <LegendItem color="#1976d2" text="Vị trí xe" isBox />
                 </Stack>
             </Paper>
-            <Box sx={{ flex: 1, p: 2, display: 'flex' }}>
+            <Box sx={{ flex: 1, p: 2, display: 'flex', position: 'relative' }}>
                 <Box sx={{ flex: 1, border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}>
                     <canvas
                         ref={canvasRef}
@@ -376,6 +466,16 @@ const NavigateToSlotPage = () => {
                         onTouchEnd={handleTouchEnd}
                     />
                 </Box>
+                {/* --- (UI) New Floating Action Button for TTS --- */}
+                <Fab
+                    color="primary"
+                    aria-label="speak directions"
+                    onClick={handleSpeak}
+                    disabled={isSpeaking || pathToVehicle.length === 0}
+                    sx={{ position: 'absolute', bottom: 32, right: 32 }}
+                >
+                    {isSpeaking ? <CircularProgress size={24} color="inherit" /> : <VolumeUpIcon />}
+                </Fab>
             </Box>
         </Box>
     );

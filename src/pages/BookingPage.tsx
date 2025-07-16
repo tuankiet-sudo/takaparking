@@ -111,13 +111,23 @@ const BookingPage = () => {
     const getSlotStatus = (column: string, slotNumber: number) => {
         const slot = getSlotFromState(column, slotNumber);
         if (!slot || !userSelectedTime) return 'available';
+
         if (slot.status === 'occupied' || slot.status === 'booked') {
             const bookedTime = dayjs(slot.booking_time);
+
+            // Add this check to see if the booking is on a different day.
+            if (!userSelectedTime.isSame(bookedTime, 'day')) {
+                return 'available';
+            }
+
+            // If it's the same day, the original time-based logic applies.
             const minutesDifference = bookedTime.diff(userSelectedTime, 'minute');
+
             if (userSelectedTime.isAfter(bookedTime)) return 'booked_before';
             if (minutesDifference <= 90 && minutesDifference >= 0) return 'booked_before';
             if (minutesDifference > 90) return 'booked_after';
         }
+        
         return 'available';
     };
 
@@ -207,7 +217,7 @@ const BookingPage = () => {
                     <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                         <IconButton onClick={() => navigate(-1)}><ArrowBackIcon /></IconButton>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                            Booking
+                            Đặt chỗ
                         </Typography>
                     </Box>
                 </Paper>

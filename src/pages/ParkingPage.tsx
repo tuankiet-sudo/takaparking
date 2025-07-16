@@ -13,7 +13,7 @@ import type { JSX } from 'react/jsx-runtime';
 const parkingOptions = [
 { name: 'VỊ TRÍ XE', icon: <LocationOnIcon sx={{color: 'white', fontSize: 32}}/> },
 { name: 'TÌM CHỖ TRỐNG', icon: <SearchIcon sx={{color: 'white', fontSize: 32}}/>, path: '/parking/find-slot' },
-{ name: 'BOOKING', icon: <EventAvailableIcon sx={{color: 'white', fontSize: 32}}/>, path: '/parking/book-slot' },
+{ name: 'ĐẶT CHỖ', icon: <EventAvailableIcon sx={{color: 'white', fontSize: 32}}/>, path: '/parking/book-slot' },
 { name: 'THANH TOÁN', icon: <PaymentIcon sx={{color: 'white', fontSize: 32}}/>, path: '/parking/pay-fee' },
 ];
 
