@@ -452,7 +452,7 @@ const NavigateToSlotPage = () => {
                     <LegendItem color="#1976d2" text="Vị trí xe" isBox />
                 </Stack>
             </Paper>
-            <Box sx={{ flex: 1, p: 2, display: 'flex', position: 'relative' }}>
+            <Box sx={{ height: '65vh', p: 2, display: 'flex', position: 'relative' }}>
                 <Box sx={{ flex: 1, border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}>
                     <canvas
                         ref={canvasRef}
