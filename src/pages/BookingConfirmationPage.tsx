@@ -109,7 +109,7 @@ const BookingConfirmationPage = () => {
                     </Paper>
                 ))}
                 <Typography sx={{ fontStyle: 'italic', color: 'error.main', mt: 3, textAlign: 'center' }}>
-                    Lưu ý: Chỗ của bạn sẽ được giữ trong 15 phút kể từ {bookingConfirmationData.bookingTime}. Sau thời gian trên, hệ thống sẽ tự động hủy chỗ. Vui lòng đến đúng giờ và đậu xe đúng vị trí đã đặt trên hệ thống.
+                    Lưu ý: Chỗ của bạn sẽ được giữ trong 30 phút kể từ {bookingConfirmationData.bookingTime}. Sau thời gian trên, hệ thống sẽ tự động hủy chỗ. Vui lòng đến đúng giờ và đậu xe đúng vị trí đã đặt trên hệ thống.
                 </Typography>
                 <Typography sx={{ color: 'text.secondary', mt: 2, textAlign: 'center', fontSize: '0.9rem' }}>
                     Vị trí xe của bạn đã được tự động lưu trên hệ thống. Sau khi mua sắm, vui lòng mở ứng dụng và chọn chức năng "Tìm xe" để được chỉ dẫn đến xe trong bãi.
