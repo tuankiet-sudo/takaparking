@@ -25,7 +25,7 @@ const groupSlotsByColumn = (bookedSlots: string[]) => {
     return Object.values(grouped);
 };
 
-// --- Helper component for downloading QR codes ---
+// Helper component for downloading QR codes
 const handleDownload = async (qrCodeUrl: string, fileName: string) => {
     try {
         const response = await fetch(qrCodeUrl);
@@ -49,20 +49,46 @@ const BookingConfirmationPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Get data passed from the booking page
-    const { bookedSlots, bookingDateTime } = location.state || { bookedSlots: [], bookingDateTime: new Date().toISOString() };
+    // --- MODIFIED: Get detailed vehicle info from location.state ---
+    const { bookedSlots, bookingDateTime, vehicleType, isElectric, willCharge } = location.state as {
+        bookedSlots: string[];
+        bookingDateTime: string;
+        vehicleType: 'motorbike' | 'car';
+        isElectric: 'gas' | 'electric';
+        willCharge: 'yes' | 'no';
+    } || { 
+        bookedSlots: [], 
+        bookingDateTime: new Date().toISOString(),
+        vehicleType: 'car',
+        isElectric: 'gas',
+        willCharge: 'no'
+    };
+
+    // --- NEW: Function to create detailed vehicle display name ---
+    const getVehicleTypeDisplay = () => {
+        if (vehicleType === 'motorbike') {
+            return isElectric === 'electric' ? 'Xe máy điện' : 'Xe máy xăng';
+        }
+        if (vehicleType === 'car') {
+            return isElectric === 'electric' ? 'Ô tô điện' : 'Ô tô xăng';
+        }
+        return 'Không xác định';
+    };
 
     // Process the data for display
     const bookingConfirmationData = {
         bookingCode: `TKS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         bookingDate: dayjs(bookingDateTime).format('DD/MM/YYYY'),
         bookingTime: dayjs(bookingDateTime).format('HH:mm'),
+        vehicleType: getVehicleTypeDisplay(),
+        isElectric: isElectric,
+        chargingNeed: willCharge === 'yes' ? 'Có' : 'Không',
         details: groupSlotsByColumn(bookedSlots)
     };
 
     return (
-        <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100vh', pb: 4 }}>
-            <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#f7f7f7', minHeight: '100vh', pb: 4 }}>
+            <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white', width: '100%' }}>
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <IconButton onClick={() => navigate('/parking')}><ArrowBackIcon /></IconButton>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
@@ -70,7 +96,7 @@ const BookingConfirmationPage = () => {
                     </Typography>
                 </Box>
             </Paper>
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 2}}>
                 <Stack alignItems="center" sx={{ mb: 2 }}>
                     <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60, mb: 1 }}/>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
@@ -81,6 +107,12 @@ const BookingConfirmationPage = () => {
                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>Thông tin chung</Typography>
                     <Stack divider={<Divider flexItem />} spacing={1}>
                         <InfoRow label="Mã đặt chỗ" value={bookingConfirmationData.bookingCode} />
+                        {/* --- MODIFIED: Display detailed vehicle type --- */}
+                        <InfoRow label="Loại xe" value={bookingConfirmationData.vehicleType} />
+                        {/* --- NEW: Conditionally display charging need --- */}
+                        {bookingConfirmationData.isElectric === 'electric' && (
+                            <InfoRow label="Nhu cầu sạc điện" value={bookingConfirmationData.chargingNeed} />
+                        )}
                         <InfoRow label="Ngày đặt" value={bookingConfirmationData.bookingDate} />
                         <InfoRow label="Giờ đặt" value={bookingConfirmationData.bookingTime} />
                     </Stack>
@@ -116,37 +148,22 @@ const BookingConfirmationPage = () => {
                 </Typography>
             </Box>
             <Button
-
                 variant="contained"
-
                 size="large"
-
                 fullWidth
-
                 onClick={() => navigate('/parking')}
-
                 sx={{
-
                     py: 1,
-
                     fontSize: '1rem',
-
                     fontWeight: 'bold',
-
                     borderRadius: '12px',
-
                     backgroundColor: '#E53935',
-
                     maxWidth: '200px',
-
+                    mt: 2,
                     '&:hover': { backgroundColor: '#C62828' }
-
                 }}
-
             >
-
                 Hoàn tất
-
             </Button>
         </Box>
     );

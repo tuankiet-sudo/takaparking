@@ -3,7 +3,7 @@ import {
     Box, Typography, Paper, IconButton, Button, Stack,
     FormControl, InputLabel, Select, MenuItem, Modal, Fade, Snackbar, CircularProgress
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -31,21 +31,63 @@ const LegendItem = ({ color, text }: { color: string; text: string; }) => (
 
 const BookingPage = () => {
     const navigate = useNavigate();
-    
+    const { vehicleType } = useParams<{ vehicleType: 'motorbike' | 'car' }>();
+
     const [allSlots, setAllSlots] = useState<ParkingSlot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
     const [selectedHour, setSelectedHour] = useState<string>(dayjs().format('HH'));
     const [selectedMinute, setSelectedMinute] = useState<string>(String(Math.ceil(dayjs().minute() / 5) * 5).padStart(2, '0'));
-    const [selectedColumn, setSelectedColumn] = useState<string>('E9');
+    const [selectedColumn, setSelectedColumn] = useState<string>('');
     const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
     const [warningModalOpen, setWarningModalOpen] = useState(false);
     const [warningSlotInfo, setWarningSlotInfo] = useState<{ id: string; bookedTime: string } | null>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
+    // --- NEW: State for vehicle options ---
+    const [isElectric, setIsElectric] = useState<'gas' | 'electric'>('gas');
+    const [willCharge, setWillCharge] = useState<'yes' | 'no'>('no');
+
     const now = dayjs();
-    const columns = Array.from({ length: 8 }, (_, i) => `${String.fromCharCode(69 + i)}9`);
+
+    // --- MODIFIED: Dynamic column logic based on vehicle type and options ---
+    const columns = useMemo(() => {
+        if (vehicleType === 'motorbike') {
+            if (isElectric === 'electric' && willCharge === 'yes') {
+                return ['E9', 'F9'];
+            }
+            return Array.from({ length: 6 }, (_, i) => `${String.fromCharCode(71 + i)}9`); // G9 to L9
+        }
+        if (vehicleType === 'car') {
+            if (isElectric === 'electric' && willCharge === 'yes') {
+                return ['E1', 'F1', 'G1', 'H1'];
+            }
+            return ['E2', 'E3', 'E4', 'F2', 'F3', 'F4', 'G2', 'G3', 'G4', 'H2', 'H3', 'H4'];
+        }
+        return []; // Default empty
+    }, [vehicleType, isElectric, willCharge]);
+
+    // --- NEW: Dynamic slots count based on vehicle type ---
+    const slotsToDisplay = useMemo(() => {
+        const count = vehicleType === 'car' ? 5 : 20;
+        return Array.from({ length: count }, (_, i) => i + 1);
+    }, [vehicleType]);
+    
+    // --- NEW: Effect to reset charging need if vehicle type is changed to gas ---
+    useEffect(() => {
+        if (isElectric === 'gas') {
+            setWillCharge('no');
+        }
+    }, [isElectric]);
+
+    // --- NEW: Effect to reset selected column if it's not in the available list ---
+    useEffect(() => {
+        if (columns.length > 0 && !columns.includes(selectedColumn)) {
+            setSelectedColumn(columns[0]);
+        }
+    }, [columns, selectedColumn]);
+
 
     // --- MODIFIED: Dynamic Time Options ---
     const availableHours = useMemo(() => {
@@ -67,14 +109,14 @@ const BookingPage = () => {
 
     // Effect to reset time if it becomes invalid
     useEffect(() => {
-        if (!availableHours.includes(selectedHour)) {
-            setSelectedHour(availableHours[0] || '09');
+        if (availableHours.length > 0 && !availableHours.includes(selectedHour)) {
+            setSelectedHour(availableHours[0]);
         }
     }, [availableHours, selectedHour]);
 
     useEffect(() => {
-        if (!availableMinutes.includes(selectedMinute)) {
-            setSelectedMinute(availableMinutes[0] || '00');
+        if (availableMinutes.length > 0 && !availableMinutes.includes(selectedMinute)) {
+            setSelectedMinute(availableMinutes[0]);
         }
     }, [availableMinutes, selectedMinute]);
 
@@ -115,12 +157,10 @@ const BookingPage = () => {
         if (slot.status === 'occupied' || slot.status === 'booked') {
             const bookedTime = dayjs(slot.booking_time);
 
-            // Add this check to see if the booking is on a different day.
             if (!userSelectedTime.isSame(bookedTime, 'day')) {
                 return 'available';
             }
 
-            // If it's the same day, the original time-based logic applies.
             const minutesDifference = bookedTime.diff(userSelectedTime, 'minute');
 
             if (userSelectedTime.isAfter(bookedTime)) return 'booked_before';
@@ -200,7 +240,10 @@ const BookingPage = () => {
             navigate('/parking/book-slot/success', {
                 state: {
                     bookedSlots: selectedSlots,
-                    bookingDateTime: userSelectedTime.toISOString()
+                    bookingDateTime: userSelectedTime.toISOString(),
+                    vehicleType: vehicleType,
+                    isElectric: isElectric,
+                    willCharge: willCharge
                 }
             });
         } catch (error: any) {
@@ -236,7 +279,7 @@ const BookingPage = () => {
                                         label="Ngày muốn đặt" 
                                         value={selectedDate} 
                                         onChange={(date) => setSelectedDate(date)}
-                                        minDate={dayjs()} // Disable past dates
+                                        minDate={dayjs()}
                                     />
                                     <Box>
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>Giờ đến</Typography>
@@ -259,13 +302,41 @@ const BookingPage = () => {
                             </Paper>
                             <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 2 }}>
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>Vị trí</Typography>
+
+                                {/* --- NEW: Conditional controls for vehicle type --- */}
+                                {(vehicleType === 'motorbike' || vehicleType === 'car') && (
+                                     <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Loại xe</InputLabel>
+                                            <Select value={isElectric} label="Loại xe" onChange={(e) => setIsElectric(e.target.value as 'gas' | 'electric')}>
+                                                <MenuItem value="gas">Xe xăng</MenuItem>
+                                                <MenuItem value="electric">Xe điện</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Nhu cầu sạc điện</InputLabel>
+                                            <Select value={willCharge} label="Nhu cầu sạc điện" onChange={(e) => setWillCharge(e.target.value as 'yes' | 'no')} disabled={isElectric === 'gas'}>
+                                                <MenuItem value="no">Không</MenuItem>
+                                                <MenuItem value="yes">Có</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Cột</InputLabel>
+                                            <Select value={selectedColumn} label="Cột" onChange={(e) => setSelectedColumn(e.target.value)}>
+                                                {columns.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                                            </Select>
+                                        </FormControl>
+                                    </Stack>
+                                )}
+                               
                                 <Stack direction="column" alignItems={'center'} spacing={2}>
-                                    <FormControl sx={{ minWidth: 80, maxWidth: 200 }}><InputLabel>Cột</InputLabel><Select value={selectedColumn} label="Cột" onChange={(e) => setSelectedColumn(e.target.value)}>{columns.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+                                    
                                     <Box sx={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 1, width: '100%' }}>
-                                        {Array.from({ length: 20 }, (_, i) => i + 1).map(slotNumber => {
+                                        {/* --- MODIFIED: Use dynamic slotsToDisplay --- */}
+                                        {slotsToDisplay.map(slotNumber => {
                                             const status = getSlotStatus(selectedColumn, slotNumber);
                                             const isSelected = selectedSlots.includes(`${selectedColumn}-${slotNumber}`);
-                                            const colors = { available: '#66BB6A', booked_before: '#E53935', booked_after: '#FFA726' };
+                                            const colors: { [key: string]: string } = { available: '#66BB6A', booked_before: '#E53935', booked_after: '#FFA726' };
                                             return (<Button key={slotNumber} variant="contained" onClick={() => handleSlotClick(selectedColumn, slotNumber)}
                                                 sx={{ minWidth: 0, p: 0, height: 40, bgcolor: colors[status], color: 'white', border: isSelected ? '3px solid #1976D2' : 'none', '&:hover': { bgcolor: colors[status], opacity: 0.9 }, cursor: status === 'booked_before' ? 'not-allowed' : 'pointer' }}
                                             >{slotNumber}</Button>);
@@ -276,11 +347,8 @@ const BookingPage = () => {
                             <Paper elevation={0} sx={{ p: 2, borderRadius: '16px', mb: 3 }}>
                                 <Stack direction="column" spacing={2} justifyContent="center" flexWrap="wrap">
                                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>Chú thích</Typography>
-
                                     <LegendItem color="#66BB6A" text="Bạn có thể đặt thoải mái và không bị giới hạn thời gian" />
-
                                     <LegendItem color="#FFA726" text="Bạn có thể đặt thoải mái nhưng bị giới hạn thời gian do có người đặt sau đó" />
-
                                     <LegendItem color="#E53935" text="Bạn không thể đặt do có người đã đặt gần khung giờ của bạn" />
                                 </Stack>
                             </Paper>
