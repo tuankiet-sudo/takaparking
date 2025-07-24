@@ -92,7 +92,7 @@ const BookingConfirmationPage = () => {
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <IconButton onClick={() => navigate('/parking')}><ArrowBackIcon /></IconButton>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                        Booking
+                        Đặt chỗ
                     </Typography>
                 </Box>
             </Paper>
