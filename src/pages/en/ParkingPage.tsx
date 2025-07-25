@@ -11,9 +11,9 @@ import { Link as RouterLink } from 'react-router-dom';
 import type { JSX } from 'react/jsx-runtime';
 
 const parkingOptions = [
-  { name: 'VEHICLE LOCATION', icon: <LocationOnIcon sx={{ color: 'white', fontSize: 32 }} /> },
-  { name: 'FIND AVAILABLE SLOT', icon: <SearchIcon sx={{ color: 'white', fontSize: 32 }} />, path: '/en/parking/find-slot' },
-  { name: 'BOOK A SLOT', icon: <EventAvailableIcon sx={{ color: 'white', fontSize: 32 }} />, path: '/en/parking/book-slot' },
+  { name: 'LOCATION', icon: <LocationOnIcon sx={{ color: 'white', fontSize: 32 }} /> },
+  { name: 'FIND A SLOT', icon: <SearchIcon sx={{ color: 'white', fontSize: 32 }} />, path: '/en/parking/find-slot' },
+  { name: 'BOOKING', icon: <EventAvailableIcon sx={{ color: 'white', fontSize: 32 }} />, path: '/en/parking/book-slot' },
   { name: 'PAYMENT', icon: <PaymentIcon sx={{ color: 'white', fontSize: 32 }} />, path: '/en/parking/pay-fee' },
 ];
 
