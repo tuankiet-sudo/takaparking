@@ -12,7 +12,7 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 const DetailRow = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
     <Stack direction="row" alignItems="center" spacing={1.5} sx={{ py: 1 }}>
         {icon}
-        <Typography sx={{ color: 'text.secondary', flex: 1 }}>{label}</Typography>
+        <Typography sx={{ color: 'text.secondary', flex: 1 , textAlign:'left'}}>{label}</Typography>
         <Typography sx={{ fontWeight: 'bold', textAlign: 'right' }}>{value}</Typography>
     </Stack>
 );

@@ -19,11 +19,16 @@ const InstructionStep = ({ number, title, subtitle }: { number: string, title: s
 const PaymentPage = () => {
     const navigate = useNavigate();
     const [vehicleId, setVehicleId] = useState('');
+    const bookedPlates = ['59L3-22222', '59L3-56789','59L3-88888','59L3-86868'];
 
     const handleLookup = () => {
         if (vehicleId.trim()) {
-            // Navigate to the confirmation page with the vehicle ID as a parameter
-            navigate(`/parking/pay-fee/confirm`);
+            const isBooked = bookedPlates.includes(vehicleId.trim());
+            if (isBooked) {
+                navigate(`/parking/pay-fee/confirm/${vehicleId.trim()}`);
+            } else {
+                navigate(`/parking/pay-fee/confirm`);
+            }
         }
     };
 
@@ -50,7 +55,7 @@ const PaymentPage = () => {
                     placeholder="Nhập biển số xe hoặc mã thẻ. VD: 59L3-44559"
                     value={vehicleId}
                     onChange={(e) => setVehicleId(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleLookup()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">

@@ -32,23 +32,28 @@ const PaymentConfirmationPageEn = () => {
         return `${day}/${month}/${year} | ${hours}:${minutes}`;
     };
 
-    // Hardcoded data for the demo
+    const isBooked = !!vehicleId;
+
     const transaction = {
         id: '#2534003',
-        imageUrl: '/vehicle.jpg',
-        licensePlate: vehicleId || '59L3-44559', // Use vehicleId from params
-        timeIn: formatDateTime(timeInTime), // Format the time in
+        imageUrl: isBooked ? `/${vehicleId}.jpg` : '/vehicle.jpg',
+        licensePlate: isBooked ? vehicleId : '59L3-44559',
+        timeIn: formatDateTime(timeInTime),
         location: 'Takashimaya',
-        fee: '5,000 VND',
+        fee: isBooked ? '10,000 VND' : '7,000 VND',
         duration: '3 hours 35 minutes',
         discount: '0 VND',
-        total: '5,000 VND'
+        total: isBooked ? '10,000 VND' : '7,000 VND'
     };
 
-    // --- Countdown Timer Logic ---
     useEffect(() => {
         if (countdown <= 0) {
-            navigate('/en/parking/pay-fee/confirm/success');
+            if (isBooked) {
+            navigate(`/en/parking/pay-fee/confirm/success/${vehicleId}`);
+            }
+            else {
+            navigate(`/en/parking/pay-fee/confirm/success`);
+            }
             return;
         }
 

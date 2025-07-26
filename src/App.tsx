@@ -57,6 +57,8 @@ function App() {
           <Route path="/parking/find-slot" element={<FindSlotPage />} />
           <Route path="/parking/find-slot/map/:basementId" element={<FindSlotMapPage />} />
           <Route path="/parking/pay-fee" element={<PaymentPage />} />
+          <Route path="/parking/pay-fee/confirm/:vehicleId" element={<PaymentConfirmationPage />} />
+          <Route path="/parking/pay-fee/confirm/success/:vehicleId" element={<PaymentSuccessPage />} />
           <Route path="/parking/pay-fee/confirm" element={<PaymentConfirmationPage />} />
           <Route path="/parking/pay-fee/confirm/success" element={<PaymentSuccessPage />} />
           <Route path="/parking/book-slot" element={<PreBookingPage />} />
@@ -72,6 +74,8 @@ function App() {
           <Route path="/en/parking/find-slot" element={<FindSlotPageEn />} />
           <Route path="/en/parking/find-slot/map/:basementId" element={<FindSlotMapPageEn />} />
           <Route path="/en/parking/pay-fee" element={<PaymentPageEn />} />
+          <Route path="/en/parking/pay-fee/confirm/:vehicleId" element={<PaymentConfirmationPageEn />} />
+          <Route path="/en/parking/pay-fee/confirm/success/:vehicleId" element={<PaymentSuccessPageEn />} />
           <Route path="/en/parking/pay-fee/confirm" element={<PaymentConfirmationPageEn />} />
           <Route path="/en/parking/pay-fee/confirm/success" element={<PaymentSuccessPageEn />} />
           <Route path="/en/parking/book-slot" element={<PreBookingPageEn />} />

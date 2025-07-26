@@ -19,11 +19,16 @@ const InstructionStep = ({ number, title, subtitle }: { number: string, title: s
 const PaymentPageEn = () => {
     const navigate = useNavigate();
     const [vehicleId, setVehicleId] = useState('');
+    const bookedPlates = ['59L3-22222', '59L3-56789','59L3-88888','59L3-86868'];
 
     const handleLookup = () => {
         if (vehicleId.trim()) {
-            // Navigate to the confirmation page with the vehicle ID as a parameter
-            navigate(`/en/parking/pay-fee/confirm`);
+            const isBooked = bookedPlates.includes(vehicleId.trim());
+            if (isBooked) {
+                navigate(`/en/parking/pay-fee/confirm/${vehicleId.trim()}`);
+            } else {
+                navigate(`/en/parking/pay-fee/confirm`);
+            }
         }
     };
 

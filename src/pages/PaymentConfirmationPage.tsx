@@ -18,7 +18,9 @@ const DetailRow = ({ label, value, valueColor = 'text.primary' }: { label: strin
 
 const PaymentConfirmationPage = () => {
     const navigate = useNavigate();
-    const { vehicleId } = useParams<{ vehicleId: string }>();
+
+    const { vehicleId } = useParams<{ vehicleId: string }>() ;
+    console.log('Vehicle ID from params:', vehicleId);
     const [countdown, setCountdown] = useState(10);
     const paymentTime = new Date(); // Current time as payment time
     const timeInTime = new Date(paymentTime.getTime() - 215 * 60 * 1000); // Simulate a time in 3 hours and 35 minutes ago
@@ -32,23 +34,29 @@ const PaymentConfirmationPage = () => {
         return `${day}/${month}/${year} | ${hours}:${minutes}`;
     };
 
-    // Hardcoded data for the demo
+const isBooked = !!vehicleId;
+
     const transaction = {
         id: '#2534003',
-        imageUrl: '/vehicle.jpg',
-        licensePlate: vehicleId || '59L3-44559', // Use vehicleId from params
-        timeIn: formatDateTime(timeInTime), // Format the time in
+        imageUrl: isBooked ? `/${vehicleId}.jpg` : '/vehicle.jpg',
+        licensePlate: isBooked ? vehicleId : '59L3-44559',
+        timeIn: formatDateTime(timeInTime),
         location: 'Takashimaya',
-        fee: '5,000 VND',
+        fee: isBooked ? '10,000 VND' : '7,000 VND',
         duration: '3 giờ 35 phút',
         discount: '0 VND',
-        total: '5,000 VND'
+        total: isBooked ? '10,000 VND' : '7,000 VND'
     };
 
     // --- Countdown Timer Logic ---
     useEffect(() => {
         if (countdown <= 0) {
-            navigate('/parking/pay-fee/confirm/success');
+            if (isBooked) {
+            navigate(`/parking/pay-fee/confirm/success/${vehicleId}`);
+            }
+            else {
+            navigate(`/parking/pay-fee/confirm/success`);
+            }
             return;
         }
 
